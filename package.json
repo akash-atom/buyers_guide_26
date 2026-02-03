@@ -1,15 +1,41 @@
 {
   "name": "@aw-webflow/buyers_guide_26",
   "version": "1.0.0",
-  
+  "description": "Buyers Guide - React project with Webflow Devlink integration",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "parcel script.js"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "build:css": "node build-css.js && node flatten-css.js",
+    "build:lib": "npm run build:css && tsc --project tsconfig.lib.json && vite build --config vite.config.lib.ts",
+    "preview": "vite preview",
+    "start": "npm run dev"
   },
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
-    "parcel": "^2.16.3"
+    "@tailwindcss/postcss": "^4.1.18",
+    "@webflow/react": "^1.2.0",
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "tailwindcss": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
   }
 }

@@ -1,2 +1,20 @@
+# Dependencies
 /node_modules
-/.parcel-cache
+
+# Build outputs
+/dist
+
+# Webflow Devlink (uncomment if you want to gitignore synced components)
+# /devlink
+
+# Environment variables
+.env
+.env.local
+
+# Editor directories
+.vscode
+.idea
+
+# OS files
+.DS_Store
+Thumbs.db

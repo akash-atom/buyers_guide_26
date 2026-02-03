@@ -1,0 +1,30 @@
+{
+  "name": "IT Maturity Quiz Components",
+  "description": "Interactive quiz to assess IT maturity level",
+  "version": "1.0.0",
+  "main": "dist/index.es.js",
+  "style": "dist/style.css",
+  "components": {
+    "ITMaturityQuiz": {
+      "displayName": "IT Maturity Quiz",
+      "description": "An interactive questionnaire to determine IT maturity level",
+      "properties": {}
+    }
+  },
+  "telemetry": {
+    "global": {
+      "allowTelemetry": false,
+      "lastPrompted": 1769764278730,
+      "version": "1.11.1"
+    }
+  },
+  "library": {
+    "components": [
+      "**/*.webflow.@(js|jsx|mjs|ts|tsx)"
+    ],
+    "globals": "./src/globals.ts",
+    "id": "react-code-components",
+    "name": "React code components",
+    "description": "This library has Ract components which can be imported in webflow"
+  }
+}
