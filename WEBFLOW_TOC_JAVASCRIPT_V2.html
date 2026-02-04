@@ -1,0 +1,206 @@
+<!--
+  TABLE OF CONTENTS UNLOCK FEATURE - JAVASCRIPT V2
+
+  This version is more aggressive about attaching event listeners
+  and handles React re-renders better.
+
+  INSTRUCTIONS:
+  1. Copy the entire <script> tag below
+  2. In Webflow: Go to Page Settings → Custom Code → Before </body>
+  3. REPLACE the old script with this one
+  4. Publish your site
+-->
+
+<script>
+(function() {
+  'use strict';
+
+  // Configuration
+  const CONFIG = {
+    tocContainer: '#table-of-contents',
+    tocLinks: '.toc-link',
+    reportContainer: '#hidden_report',
+    lockedClass: 'toc-locked',
+    unlockedClass: 'toc-unlocked'
+  };
+
+  let isTOCUnlocked = false;
+  let initAttempts = 0;
+  const MAX_INIT_ATTEMPTS = 10;
+
+  // Function to initialize TOC
+  function initializeTOC() {
+    initAttempts++;
+    console.log(`[TOC] Initialization attempt ${initAttempts}`);
+
+    const tocContainer = document.querySelector(CONFIG.tocContainer);
+    if (!tocContainer) {
+      if (initAttempts < MAX_INIT_ATTEMPTS) {
+        console.warn('[TOC] Container not found, retrying in 500ms...');
+        setTimeout(initializeTOC, 500);
+      } else {
+        console.error('[TOC] Container not found after 10 attempts');
+      }
+      return;
+    }
+
+    console.log('[TOC] Container found, initializing...');
+
+    // Set initial locked state
+    tocContainer.classList.add(CONFIG.lockedClass);
+    tocContainer.style.display = 'block';
+    tocContainer.style.opacity = '0.5';
+
+    // Disable all links
+    const links = document.querySelectorAll(CONFIG.tocLinks);
+    if (links.length === 0) {
+      console.warn('[TOC] No links found');
+      return;
+    }
+
+    console.log(`[TOC] Found ${links.length} links, disabling...`);
+
+    links.forEach((link, index) => {
+      link.style.pointerEvents = 'none';
+      link.style.cursor = 'not-allowed';
+
+      // Remove any existing click listeners by cloning
+      const newLink = link.cloneNode(true);
+      link.parentNode.replaceChild(newLink, link);
+
+      // Add preventing handler
+      newLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('[TOC] Click blocked - TOC is locked');
+        return false;
+      }, true);
+    });
+
+    console.log('[TOC] Initialized in locked state');
+  }
+
+  // Function to attach scroll handlers
+  function attachScrollHandlers() {
+    console.log('[TOC] Attaching scroll handlers...');
+
+    const links = document.querySelectorAll(CONFIG.tocLinks);
+    let handlersAttached = 0;
+
+    links.forEach((link, index) => {
+      // Clone to remove old handlers
+      const newLink = link.cloneNode(true);
+      link.parentNode.replaceChild(newLink, link);
+
+      // Enable clicking
+      newLink.style.pointerEvents = 'auto';
+      newLink.style.cursor = 'pointer';
+
+      // Add new scroll handler
+      newLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const targetId = this.getAttribute('href');
+        console.log('[TOC] Link clicked:', targetId);
+
+        if (!targetId) {
+          console.error('[TOC] No href on link');
+          return false;
+        }
+
+        const targetElement = document.querySelector(targetId);
+        console.log('[TOC] Target element:', targetElement);
+
+        if (targetElement) {
+          console.log('[TOC] Scrolling to:', targetId);
+
+          targetElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+
+          // Update active state
+          document.querySelectorAll(CONFIG.tocLinks).forEach(l =>
+            l.classList.remove('active')
+          );
+          this.classList.add('active');
+
+          console.log('[TOC] Scroll complete');
+        } else {
+          console.error('[TOC] Target section not found:', targetId);
+        }
+
+        return false;
+      }, true);
+
+      handlersAttached++;
+    });
+
+    console.log(`[TOC] Attached ${handlersAttached} scroll handlers`);
+  }
+
+  // Listen for unlock event from Quiz
+  window.addEventListener('unlockTOC', function(event) {
+    console.log('[TOC] Unlock event received:', event.detail);
+
+    const tocContainer = document.querySelector(CONFIG.tocContainer);
+    if (!tocContainer) {
+      console.error('[TOC] Container not found during unlock');
+      return;
+    }
+
+    isTOCUnlocked = true;
+
+    // Update visual state
+    tocContainer.classList.remove(CONFIG.lockedClass);
+    tocContainer.classList.add(CONFIG.unlockedClass);
+    tocContainer.style.opacity = '1';
+
+    // Attach scroll handlers
+    attachScrollHandlers();
+
+    console.log('[TOC] Unlocked successfully');
+
+    // Track analytics
+    if (window.gtag) {
+      gtag('event', 'toc_unlocked', {
+        'maturity_level': event.detail.maturityLevel,
+        'score': event.detail.score
+      });
+    }
+  });
+
+  // Listen for showReport event
+  window.addEventListener('showReport', function(event) {
+    console.log('[TOC] Show report event received:', event.detail);
+
+    const reportContainer = document.querySelector(CONFIG.reportContainer);
+
+    if (reportContainer) {
+      reportContainer.style.display = 'block';
+      console.log('[TOC] Report container shown');
+
+      setTimeout(() => {
+        reportContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+    } else {
+      console.warn('[TOC] Report container not found');
+    }
+  });
+
+  // Initialize on DOMContentLoaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTOC);
+  } else {
+    // DOM already loaded
+    initializeTOC();
+  }
+
+  // Also try after a delay (in case of dynamic content)
+  setTimeout(initializeTOC, 1000);
+
+  console.log('[TOC] Script loaded and waiting for initialization');
+
+})();
+</script>

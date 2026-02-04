@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { declareComponent } from '@webflow/react';
+import { submitToHubSpot, getAnswerText } from '../utils/hubspot';
 
 interface QuizOption {
   id: string;
@@ -64,6 +65,13 @@ function ITMaturityQuiz() {
   const [email, setEmail] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [emailError, setEmailError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // HubSpot configuration - REPLACE WITH YOUR VALUES
+  const HUBSPOT_CONFIG = {
+    portalId: 'YOUR_PORTAL_ID', // Replace with your HubSpot Portal ID
+    formId: 'YOUR_FORM_ID',     // Replace with your HubSpot Form ID
+  };
 
   const progress = ((currentQuestion + 1) / quizData.length) * 100;
 
@@ -125,7 +133,7 @@ function ITMaturityQuiz() {
     return domain && !freeEmailDomains.includes(domain);
   };
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email) {
@@ -143,10 +151,41 @@ function ITMaturityQuiz() {
       return;
     }
 
-    // Here you can send the email to your backend/API
-    console.log('Email submitted:', email);
-
+    setIsSubmitting(true);
     setEmailError('');
+
+    try {
+      // Calculate results
+      const score = calculateScore();
+      const maturityLevel = getResultMessage(score);
+
+      // Send to HubSpot
+      const result = await submitToHubSpot(
+        {
+          email: email,
+          score: score,
+          maturityLevel: maturityLevel,
+          question1Answer: getAnswerText(0, answers[0]),
+          question2Answer: getAnswerText(1, answers[1]),
+          question3Answer: getAnswerText(2, answers[2]),
+          selectedGoal: getAnswerText(3, answers[3]),
+        },
+        HUBSPOT_CONFIG
+      );
+
+      if (result.success) {
+        console.log('✅ Data submitted to HubSpot successfully');
+      } else {
+        console.warn('⚠️ HubSpot submission failed:', result.error);
+        // Continue anyway - don't block user from seeing results
+      }
+    } catch (error) {
+      console.error('HubSpot submission error:', error);
+      // Continue anyway - don't block user from seeing results
+    } finally {
+      setIsSubmitting(false);
+    }
+
     setEmailSubmitted(true);
 
     // Dispatch custom event to unlock TOC in Webflow
@@ -242,9 +281,10 @@ function ITMaturityQuiz() {
 
               <button
                 type="submit"
-                className="w-full bg-primary-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-primary-700 transition-colors shadow-lg"
+                disabled={isSubmitting}
+                className="w-full bg-primary-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-primary-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                View My Results
+                {isSubmitting ? 'Submitting...' : 'View My Results'}
               </button>
             </form>
 
