@@ -564,11 +564,11 @@ function ITMaturityQuiz() {
                     selectedGoal: answers[3]
                   });
 
-                  // Auto-scroll to report after Webflow renders it
+                  // Auto-scroll to first section of report
                   setTimeout(() => {
-                    const reportElement = document.getElementById('hidden_report');
-                    if (reportElement) {
-                      reportElement.scrollIntoView({
+                    const firstSection = document.querySelector('#section-intro');
+                    if (firstSection) {
+                      firstSection.scrollIntoView({
                         behavior: 'smooth',
                         block: 'start'
                       });
