@@ -1,0 +1,207 @@
+<!--
+  TABLE OF CONTENTS UNLOCK FEATURE - JAVASCRIPT V3
+
+  This version uses JavaScript-based smooth scrolling to avoid CSS overflow issues
+  that can block native smooth scroll behavior.
+
+  INSTRUCTIONS:
+  1. Copy the entire <script> tag below
+  2. In Webflow: Go to Page Settings → Custom Code → Before </body>
+  3. REPLACE the existing TOC script with this one
+  4. Publish your site
+-->
+
+<script>
+(function() {
+  'use strict';
+
+  // Configuration
+  const CONFIG = {
+    tocContainer: '#table-of-contents',
+    tocLinks: '.toc-link',
+    reportContainer: '#hidden_report',
+    lockedClass: 'toc-locked',
+    unlockedClass: 'toc-unlocked'
+  };
+
+  let isTOCUnlocked = false;
+
+  // JavaScript-based smooth scroll function (works even with overflow issues)
+  function smoothScrollTo(element, offset = 0) {
+    const targetPosition = element.getBoundingClientRect().top + window.pageYOffset - offset;
+    const startPosition = window.pageYOffset;
+    const distance = targetPosition - startPosition;
+    const duration = 800; // milliseconds
+    let start = null;
+
+    function animation(currentTime) {
+      if (start === null) start = currentTime;
+      const timeElapsed = currentTime - start;
+      const run = ease(timeElapsed, startPosition, distance, duration);
+      window.scrollTo(0, run);
+      if (timeElapsed < duration) requestAnimationFrame(animation);
+    }
+
+    // Easing function for smooth animation
+    function ease(t, b, c, d) {
+      t /= d / 2;
+      if (t < 1) return c / 2 * t * t + b;
+      t--;
+      return -c / 2 * (t * (t - 2) - 1) + b;
+    }
+
+    requestAnimationFrame(animation);
+  }
+
+  // Initialize on page load
+  window.addEventListener('DOMContentLoaded', function() {
+    const tocContainer = document.querySelector(CONFIG.tocContainer);
+    if (!tocContainer) {
+      console.warn('[TOC] Container not found. Expected element with id="table-of-contents"');
+      return;
+    }
+
+    console.log('[TOC] Initializing...');
+
+    // Set initial locked state
+    tocContainer.classList.add(CONFIG.lockedClass);
+    tocContainer.style.display = 'block';
+    tocContainer.style.opacity = '0.5';
+
+    // Disable all links
+    const links = document.querySelectorAll(CONFIG.tocLinks);
+    if (links.length === 0) {
+      console.warn('[TOC] No TOC links found. Expected elements with class="toc-link"');
+    }
+
+    links.forEach(link => {
+      link.style.pointerEvents = 'none';
+      link.style.cursor = 'not-allowed';
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
+    });
+
+    console.log('[TOC] Initialized in locked state');
+  });
+
+  // Listen for unlock event from Quiz
+  window.addEventListener('unlockTOC', function(event) {
+    const data = event.detail;
+    console.log('[TOC] Unlock event received:', data);
+
+    const tocContainer = document.querySelector(CONFIG.tocContainer);
+    if (!tocContainer) {
+      console.error('[TOC] Container not found during unlock');
+      return;
+    }
+
+    isTOCUnlocked = true;
+
+    // Update visual state
+    tocContainer.classList.remove(CONFIG.lockedClass);
+    tocContainer.classList.add(CONFIG.unlockedClass);
+    tocContainer.style.opacity = '1';
+
+    // Enable all links with JS smooth scroll
+    const links = document.querySelectorAll(CONFIG.tocLinks);
+    links.forEach(link => {
+      link.style.pointerEvents = 'auto';
+      link.style.cursor = 'pointer';
+
+      // Remove old handlers by cloning
+      const newLink = link.cloneNode(true);
+      link.parentNode.replaceChild(newLink, link);
+
+      // Add smooth scroll behavior using JavaScript
+      newLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const targetId = this.getAttribute('href');
+        console.log('[TOC] Navigating to:', targetId);
+
+        const targetElement = document.querySelector(targetId);
+
+        if (targetElement) {
+          // Use JavaScript smooth scroll (works with overflow issues)
+          smoothScrollTo(targetElement, 20); // 20px offset from top
+
+          console.log('[TOC] Scrolling to section');
+
+          // Update active state
+          document.querySelectorAll(CONFIG.tocLinks).forEach(l =>
+            l.classList.remove('active')
+          );
+          this.classList.add('active');
+        } else {
+          console.warn('[TOC] Target section not found:', targetId);
+        }
+
+        return false;
+      }, true);
+    });
+
+    console.log('[TOC] Links enabled with JS smooth scrolling');
+
+    // Track analytics
+    if (window.gtag) {
+      gtag('event', 'toc_unlocked', {
+        'maturity_level': data.maturityLevel,
+        'score': data.score
+      });
+    }
+  });
+
+  // Keep existing showReport listener
+  window.addEventListener('showReport', function(event) {
+    const data = event.detail;
+    console.log('[TOC] Show report event received');
+
+    const reportContainer = document.querySelector(CONFIG.reportContainer);
+
+    if (reportContainer) {
+      reportContainer.style.display = 'block';
+      setTimeout(() => {
+        const firstSection = document.querySelector('#section-intro');
+        if (firstSection) {
+          smoothScrollTo(firstSection, 20);
+        }
+      }, 150);
+    } else {
+      console.warn('[TOC] Report container not found');
+    }
+  });
+
+  // Optional: Track active section on scroll
+  let scrollTimeout;
+  window.addEventListener('scroll', function() {
+    if (!isTOCUnlocked) return;
+
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      const links = document.querySelectorAll(CONFIG.tocLinks);
+      let activeFound = false;
+
+      links.forEach(link => {
+        const targetId = link.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+
+        if (targetElement && !activeFound) {
+          const rect = targetElement.getBoundingClientRect();
+          // Check if section is in viewport (top 25% of screen)
+          if (rect.top <= window.innerHeight * 0.25 && rect.bottom >= 0) {
+            links.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+            activeFound = true;
+          }
+        }
+      });
+    }, 100);
+  });
+
+  console.log('[TOC] Script loaded');
+
+})();
+</script>
