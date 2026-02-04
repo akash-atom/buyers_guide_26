@@ -1,0 +1,244 @@
+<!--
+  TABLE OF CONTENTS UNLOCK FEATURE - CSS STYLES
+
+  INSTRUCTIONS:
+  1. Copy the entire <style> tag below
+  2. In Webflow: Add an Embed element to your page OR go to Page Settings → Custom Code → Head Code
+  3. Paste this code
+  4. Publish your site
+
+  NOTE: Customize colors, spacing, and styles to match your brand
+-->
+
+<style>
+/* ===========================
+   LOCKED STATE STYLES
+   =========================== */
+
+.toc-locked {
+  opacity: 0.5;
+  filter: grayscale(50%);
+  position: relative;
+}
+
+/* Lock indicator message */
+.toc-locked::before {
+  content: "🔒 Complete quiz to unlock";
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.toc-locked .toc-link {
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+  color: #999 !important;
+}
+
+
+/* ===========================
+   UNLOCKED STATE STYLES
+   =========================== */
+
+.toc-unlocked {
+  opacity: 1;
+  filter: none;
+  transition: all 0.3s ease-in-out;
+}
+
+.toc-unlocked .toc-link {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Hover effects for unlocked links */
+.toc-unlocked .toc-link:hover {
+  background: rgba(124, 58, 237, 0.1);
+  color: #7C3AED;
+  transform: translateX(4px);
+}
+
+/* Active link highlighting */
+.toc-unlocked .toc-link.active {
+  background: rgba(124, 58, 237, 0.15);
+  color: #7C3AED;
+  font-weight: 600;
+  border-left: 3px solid #7C3AED;
+  padding-left: 13px;
+}
+
+
+/* ===========================
+   SMOOTH SCROLLING
+   =========================== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+
+/* ===========================
+   TABLE OF CONTENTS LAYOUT
+   =========================== */
+
+/* Fixed left sidebar layout (recommended) */
+#table-of-contents {
+  position: fixed;
+  left: 20px;
+  top: 100px;
+  width: 250px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+/* TOC link styling */
+.toc-link {
+  display: block;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  border-radius: 8px;
+  color: #374151;
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1.4;
+  transition: all 0.2s ease;
+}
+
+/* Scrollbar styling for TOC container */
+#table-of-contents::-webkit-scrollbar {
+  width: 6px;
+}
+
+#table-of-contents::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+#table-of-contents::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+#table-of-contents::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+
+/* ===========================
+   REPORT CONTAINER LAYOUT
+   =========================== */
+
+/* Add left margin to report to accommodate fixed TOC */
+#hidden_report {
+  margin-left: 300px;
+  padding: 20px;
+  display: none; /* Initially hidden */
+}
+
+/* Report sections with scroll offset for fixed headers */
+#hidden_report section,
+#hidden_report [id^="section-"] {
+  padding-top: 20px;
+  margin-bottom: 40px;
+}
+
+
+/* ===========================
+   MOBILE RESPONSIVE
+   =========================== */
+
+@media (max-width: 768px) {
+  /* Move TOC to top on mobile */
+  #table-of-contents {
+    position: relative;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-height: none;
+    margin-bottom: 20px;
+  }
+
+  /* Smaller lock message on mobile */
+  .toc-locked::before {
+    font-size: 12px;
+    padding: 6px 12px;
+    top: -25px;
+  }
+
+  /* Remove left margin on mobile */
+  #hidden_report {
+    margin-left: 0;
+    padding: 10px;
+  }
+
+  /* Adjust TOC link font size on mobile */
+  .toc-link {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  #table-of-contents {
+    padding: 15px;
+  }
+
+  .toc-link {
+    font-size: 12px;
+  }
+}
+
+
+/* ===========================
+   OPTIONAL ENHANCEMENTS
+   =========================== */
+
+/* Add a subtle animation when TOC unlocks */
+@keyframes unlock-fade-in {
+  from {
+    opacity: 0.5;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.toc-unlocked {
+  animation: unlock-fade-in 0.4s ease-out;
+}
+
+/* Optional: Add icons to TOC links */
+.toc-link::before {
+  content: "→";
+  margin-right: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.toc-unlocked .toc-link:hover::before {
+  opacity: 1;
+}
+
+.toc-unlocked .toc-link.active::before {
+  content: "•";
+  opacity: 1;
+  color: #7C3AED;
+  font-weight: bold;
+}
+</style>

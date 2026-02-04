@@ -1,0 +1,166 @@
+<!--
+  TABLE OF CONTENTS UNLOCK FEATURE - JAVASCRIPT
+
+  INSTRUCTIONS:
+  1. Copy the entire <script> tag below
+  2. In Webflow: Go to Page Settings → Custom Code → Before </body>
+  3. Paste this code
+  4. Publish your site
+
+  PREREQUISITES:
+  - TOC container must have id="table-of-contents"
+  - TOC links must have class="toc-link"
+  - Report container must have id="hidden_report"
+  - Report sections must have IDs matching TOC href values (e.g., #section-intro)
+-->
+
+<script>
+(function() {
+  'use strict';
+
+  // Configuration
+  const CONFIG = {
+    tocContainer: '#table-of-contents',
+    tocLinks: '.toc-link',
+    reportContainer: '#hidden_report',
+    lockedClass: 'toc-locked',
+    unlockedClass: 'toc-unlocked'
+  };
+
+  let isTOCUnlocked = false;
+
+  // Initialize on page load
+  window.addEventListener('DOMContentLoaded', function() {
+    const tocContainer = document.querySelector(CONFIG.tocContainer);
+    if (!tocContainer) {
+      console.warn('TOC container not found. Expected element with id="table-of-contents"');
+      return;
+    }
+
+    // Set initial locked state
+    tocContainer.classList.add(CONFIG.lockedClass);
+    tocContainer.style.display = 'block';
+    tocContainer.style.opacity = '0.5';
+
+    // Disable all links
+    const links = document.querySelectorAll(CONFIG.tocLinks);
+    if (links.length === 0) {
+      console.warn('No TOC links found. Expected elements with class="toc-link"');
+    }
+
+    links.forEach(link => {
+      link.style.pointerEvents = 'none';
+      link.style.cursor = 'not-allowed';
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
+    });
+
+    console.log('TOC initialized in locked state');
+  });
+
+  // Listen for unlock event from Quiz
+  window.addEventListener('unlockTOC', function(event) {
+    const data = event.detail;
+    console.log('TOC unlocked:', data);
+
+    const tocContainer = document.querySelector(CONFIG.tocContainer);
+    if (!tocContainer) {
+      console.error('TOC container not found during unlock');
+      return;
+    }
+
+    isTOCUnlocked = true;
+
+    // Update visual state
+    tocContainer.classList.remove(CONFIG.lockedClass);
+    tocContainer.classList.add(CONFIG.unlockedClass);
+    tocContainer.style.opacity = '1';
+
+    // Enable all links
+    const links = document.querySelectorAll(CONFIG.tocLinks);
+    links.forEach(link => {
+      link.style.pointerEvents = 'auto';
+      link.style.cursor = 'pointer';
+
+      // Add smooth scroll behavior
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+
+          // Update active state
+          document.querySelectorAll(CONFIG.tocLinks).forEach(l =>
+            l.classList.remove('active')
+          );
+          this.classList.add('active');
+        } else {
+          console.warn('Target section not found:', targetId);
+        }
+      });
+    });
+
+    console.log('TOC links enabled with smooth scrolling');
+
+    // Track analytics (optional - only if Google Analytics is configured)
+    if (window.gtag) {
+      gtag('event', 'toc_unlocked', {
+        'maturity_level': data.maturityLevel,
+        'score': data.score
+      });
+    }
+  });
+
+  // Keep existing showReport listener
+  window.addEventListener('showReport', function(event) {
+    const data = event.detail;
+    console.log('Show report event received:', data);
+
+    const reportContainer = document.querySelector(CONFIG.reportContainer);
+
+    if (reportContainer) {
+      reportContainer.style.display = 'block';
+      setTimeout(() => {
+        reportContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+    } else {
+      console.warn('Report container not found. Expected element with id="hidden_report"');
+    }
+  });
+
+  // Optional: Track active section on scroll
+  let scrollTimeout;
+  window.addEventListener('scroll', function() {
+    if (!isTOCUnlocked) return;
+
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      const links = document.querySelectorAll(CONFIG.tocLinks);
+      let activeFound = false;
+
+      links.forEach(link => {
+        const targetId = link.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+
+        if (targetElement && !activeFound) {
+          const rect = targetElement.getBoundingClientRect();
+          // Check if section is in viewport (top 25% of screen)
+          if (rect.top <= window.innerHeight * 0.25 && rect.bottom >= 0) {
+            links.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+            activeFound = true;
+          }
+        }
+      });
+    }, 100);
+  });
+
+})();
+</script>

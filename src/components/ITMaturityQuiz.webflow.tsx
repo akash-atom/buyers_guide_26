@@ -148,6 +148,17 @@ function ITMaturityQuiz() {
 
     setEmailError('');
     setEmailSubmitted(true);
+
+    // Dispatch custom event to unlock TOC in Webflow
+    window.dispatchEvent(new CustomEvent('unlockTOC', {
+      detail: {
+        email: email,
+        maturityLevel: getResultMessage(calculateScore()),
+        score: calculateScore(),
+        timestamp: new Date().toISOString(),
+        quizCompleted: true
+      }
+    }));
   };
 
   // Calculate total score from questions 1-3
@@ -552,6 +563,17 @@ function ITMaturityQuiz() {
                     score: totalScore,
                     selectedGoal: answers[3]
                   });
+
+                  // Auto-scroll to report after Webflow renders it
+                  setTimeout(() => {
+                    const reportElement = document.getElementById('hidden_report');
+                    if (reportElement) {
+                      reportElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                      });
+                    }
+                  }, 150);
                 }}
                 className="bg-primary-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-primary-700 transition-colors"
               >
@@ -579,7 +601,7 @@ function ITMaturityQuiz() {
               {Math.round(progress)}%
             </span>
           </div>
-          <div className="h-2 bg-white/50 rounded-full overflow-hidden">
+          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
               className="h-full bg-primary-600 transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}

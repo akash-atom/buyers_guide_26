@@ -1,0 +1,218 @@
+<!--
+  TABLE OF CONTENTS - HTML STRUCTURE GUIDE
+
+  INSTRUCTIONS FOR WEBFLOW DESIGNER:
+  This file shows the HTML structure you need to create in Webflow.
+  Use this as a reference when building your TOC and report sections.
+
+  ⚠️ IMPORTANT: Create your report content FIRST before implementing the TOC feature!
+-->
+
+
+<!-- ============================================
+     1. TABLE OF CONTENTS STRUCTURE
+     ============================================ -->
+
+<!--
+  Create a <nav> element (or div) with these settings:
+  - Element: Nav or Div
+  - ID: table-of-contents
+  - Position: Fixed
+  - Left: 20px
+  - Top: 100px (adjust based on your header height)
+  - Width: 250px
+  - Add padding, background, border-radius via Webflow styles
+-->
+
+<nav id="table-of-contents">
+  <!-- Each link must have:
+       - Class: toc-link
+       - Href: matching section ID (e.g., #section-intro)
+  -->
+  <a href="#section-intro" class="toc-link">Introduction</a>
+  <a href="#section-assessment" class="toc-link">Your IT Maturity Assessment</a>
+  <a href="#section-reactive" class="toc-link">Reactive IT Stage</a>
+  <a href="#section-structured" class="toc-link">Structured IT Stage</a>
+  <a href="#section-optimized" class="toc-link">Optimized IT Stage</a>
+  <a href="#section-next-steps" class="toc-link">Next Steps</a>
+</nav>
+
+
+<!-- ============================================
+     2. REPORT CONTAINER STRUCTURE
+     ============================================ -->
+
+<!--
+  Create a <div> with these settings:
+  - ID: hidden_report
+  - Display: None (or Height: 0px, Overflow: hidden)
+  - Margin-left: 300px (to accommodate fixed TOC)
+  - Add padding for content spacing
+-->
+
+<div id="hidden_report" style="display: none; margin-left: 300px; padding: 20px;">
+
+  <!-- ============================================
+       3. REPORT SECTIONS
+       ============================================
+
+       Each section must have:
+       - An ID that matches the TOC href (without the #)
+       - Padding-top for scroll offset
+       - Content structured with headings, paragraphs, etc.
+  -->
+
+  <!-- Introduction Section -->
+  <section id="section-intro" style="padding-top: 20px; margin-bottom: 40px;">
+    <h2>Introduction</h2>
+    <p>Welcome to your IT Maturity Assessment Report. This report is tailored based on your responses...</p>
+    <!-- Add more content here -->
+  </section>
+
+  <!-- Assessment Results Section -->
+  <section id="section-assessment" style="padding-top: 20px; margin-bottom: 40px;">
+    <h2>Your IT Maturity Assessment</h2>
+    <p>Based on your quiz responses, we've identified your current maturity level...</p>
+    <!-- Add charts, scores, insights here -->
+  </section>
+
+  <!-- Reactive IT Section -->
+  <section id="section-reactive" style="padding-top: 20px; margin-bottom: 40px;">
+    <h2>Understanding the Reactive IT Stage</h2>
+    <h3>Key Characteristics</h3>
+    <ul>
+      <li>40-50% of tickets are deflectable but handled manually</li>
+      <li>Agents spend most time on routine requests</li>
+      <li>Limited automation or AI deflection</li>
+    </ul>
+    <h3>Common Challenges</h3>
+    <p>Teams at this stage often struggle with...</p>
+    <h3>Path to Improvement</h3>
+    <p>The first step is to implement basic AI deflection...</p>
+    <!-- Add more detailed content -->
+  </section>
+
+  <!-- Structured IT Section -->
+  <section id="section-structured" style="padding-top: 20px; margin-bottom: 40px;">
+    <h2>Moving to Structured IT</h2>
+    <h3>What Changes at This Stage</h3>
+    <p>Organizations at the Structured IT stage have begun deflecting easy requests...</p>
+    <h3>Key Focus Areas</h3>
+    <ul>
+      <li>Workflow automation for common processes</li>
+      <li>Improving handoffs between systems</li>
+      <li>Reducing manual provisioning tasks</li>
+    </ul>
+    <!-- Add more content -->
+  </section>
+
+  <!-- Optimized IT Section -->
+  <section id="section-optimized" style="padding-top: 20px; margin-bottom: 40px;">
+    <h2>Achieving Optimized IT</h2>
+    <h3>The Pinnacle of IT Maturity</h3>
+    <p>At this stage, routine work is largely automated, and agents focus on complex challenges...</p>
+    <h3>Best Practices</h3>
+    <ul>
+      <li>80-90% autonomous ticket resolution</li>
+      <li>Predictive service delivery</li>
+      <li>Enterprise-wide ESM capabilities</li>
+    </ul>
+    <!-- Add more content -->
+  </section>
+
+  <!-- Next Steps Section -->
+  <section id="section-next-steps" style="padding-top: 20px; margin-bottom: 40px;">
+    <h2>Your Next Steps</h2>
+    <p>Based on your current maturity level and goals, we recommend:</p>
+    <ol>
+      <li><strong>Quick Win:</strong> Implement AI deflection for password resets</li>
+      <li><strong>Medium-term:</strong> Automate user provisioning workflows</li>
+      <li><strong>Long-term:</strong> Build enterprise service management capabilities</li>
+    </ol>
+    <h3>Talk to Our Team</h3>
+    <p>Schedule a consultation to discuss your specific needs...</p>
+    <!-- Add CTA buttons, contact forms, etc. -->
+  </section>
+
+</div>
+
+
+<!-- ============================================
+     4. RECOMMENDED CONTENT STRUCTURE
+     ============================================
+
+     For each maturity stage section, consider including:
+
+     ✅ Overview of the stage
+     ✅ Key characteristics and metrics
+     ✅ Common challenges faced
+     ✅ Typical ticket composition breakdown
+     ✅ Technology recommendations
+     ✅ Implementation strategies
+     ✅ ROI examples or case studies
+     ✅ Path to the next stage
+
+     Make content actionable and specific!
+-->
+
+
+<!-- ============================================
+     5. LAYOUT VISUALIZATION
+     ============================================
+
+┌─────────────────────────────────────────────────┐
+│                  Header / Nav                    │
+├──────────┬──────────────────────────────────────┤
+│          │                                       │
+│  TOC     │    Quiz Component (initially)        │
+│  (Fixed) │                                       │
+│  🔒      │    [Quiz questions and options]      │
+│  Locked  │                                       │
+│          │    [Email submission form]           │
+│          │                                       │
+│          │    Then Report Content (after unlock)│
+│          │                                       │
+│  • Intro │    [Your IT Maturity Report]         │
+│  • Assess│    [Detailed sections with content]  │
+│  • Stage │                                       │
+│  • Next  │                                       │
+│          │                                       │
+└──────────┴──────────────────────────────────────┘
+
+Mobile layout:
+┌─────────────────┐
+│  Header / Nav   │
+├─────────────────┤
+│ TOC (unlocked)  │
+│ • Intro         │
+│ • Assessment    │
+├─────────────────┤
+│                 │
+│ Quiz Component  │
+│                 │
+│ Report Content  │
+│                 │
+└─────────────────┘
+-->
+
+
+<!-- ============================================
+     6. TESTING CHECKLIST
+     ============================================
+
+     After implementing in Webflow, test these scenarios:
+
+     □ Page loads with TOC visible but locked (grayed out)
+     □ Lock message displays above TOC
+     □ Clicking TOC links does nothing while locked
+     □ Complete quiz and submit email
+     □ TOC unlocks (full opacity, colors restored)
+     □ Lock message disappears
+     □ Click each TOC link - should smooth scroll to section
+     □ Active section highlights as you scroll
+     □ Click "Read the report" button - report appears
+     □ TOC navigation still works after report shows
+     □ Test on mobile devices (TOC should reposition)
+     □ Check browser console for any errors
+     □ Verify analytics events fire (if configured)
+-->
