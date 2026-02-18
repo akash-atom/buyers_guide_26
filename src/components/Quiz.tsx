@@ -916,12 +916,10 @@ export default function Quiz() {
           border: '1px solid rgba(0, 0, 0, 0.12)',
           borderRadius: '16px',
           backgroundColor: '#FFFFFF',
-          padding: '64px',
-          transition: 'opacity 300ms ease-in-out',
-          opacity: isTransitioning ? 0 : 1
+          padding: '64px'
         }}
       >
-        {/* Segmented Progress Bar */}
+        {/* Segmented Progress Bar - always visible */}
         <div style={{ marginBottom: '48px' }}>
           {/* Step count and percentage */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -965,8 +963,13 @@ export default function Quiz() {
           </div>
         </div>
 
-        {/* Question */}
-        <div>
+        {/* Question content - fades during transitions */}
+        <div
+          style={{
+            transition: 'opacity 300ms ease-in-out',
+            opacity: isTransitioning ? 0 : 1
+          }}
+        >
           <h2
             style={{
               fontFamily: 'Inter Display',
