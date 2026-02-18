@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { submitToHubSpot, getAnswerText } from '../utils/hubspot';
+import OnboardingScreen from './OnboardingScreen';
 
 interface QuizOption {
   id: string;
@@ -57,14 +58,17 @@ const quizData: QuizQuestion[] = [
 ];
 
 export default function Quiz() {
+  const [showOnboarding, setShowOnboarding] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [selectedOption, setSelectedOption] = useState<string>('');
   const [isComplete, setIsComplete] = useState(false);
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // HubSpot configuration - REPLACE WITH YOUR VALUES
   const HUBSPOT_CONFIG = {
@@ -74,29 +78,43 @@ export default function Quiz() {
 
   const progress = ((currentQuestion + 1) / quizData.length) * 100;
 
-  const handleOptionSelect = (optionValue: string) => {
-    setSelectedOption(optionValue);
+  const handleStartQuiz = () => {
+    setShowOnboarding(false);
   };
 
-  const handleNext = () => {
-    if (!selectedOption) return;
+  const handleOptionSelect = (optionValue: string) => {
+    setSelectedOption(optionValue);
 
-    // Save the answer
-    setAnswers({ ...answers, [currentQuestion]: selectedOption });
+    // Auto-advance to next question after 400ms
+    setTimeout(() => {
+      setIsTransitioning(true);
 
-    // Move to next question or complete
-    if (currentQuestion < quizData.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-      setSelectedOption('');
-    } else {
-      setIsComplete(true);
-    }
+      setTimeout(() => {
+        // Save the answer
+        setAnswers({ ...answers, [currentQuestion]: optionValue });
+
+        // Move to next question or complete
+        if (currentQuestion < quizData.length - 1) {
+          setCurrentQuestion(currentQuestion + 1);
+          setSelectedOption('');
+        } else {
+          setIsComplete(true);
+        }
+
+        setIsTransitioning(false);
+      }, 300);
+    }, 400);
   };
 
   const handlePrevious = () => {
     if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
-      setSelectedOption(answers[currentQuestion - 1] || '');
+      setIsTransitioning(true);
+
+      setTimeout(() => {
+        setCurrentQuestion(currentQuestion - 1);
+        setSelectedOption(answers[currentQuestion - 1] || '');
+        setIsTransitioning(false);
+      }, 300);
     }
   };
 
@@ -228,69 +246,213 @@ export default function Quiz() {
     }
   };
 
-  if (isComplete && !emailSubmitted) {
-    // Show email collection form
+  // Show onboarding screen first
+  if (showOnboarding) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-primary-100 flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full">
-          <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 animate-fade-in">
-            <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-8">
-              <svg
-                className="w-10 h-10 text-primary-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
+      <div
+        className="flex items-center justify-center p-4"
+        style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(180deg, #F9F5FF 0%, #FFFFFF 100%)'
+        }}
+      >
+        <div
+          style={{
+            maxWidth: '1066px',
+            width: '100%',
+            border: '1px solid rgba(0, 0, 0, 0.12)',
+            borderRadius: '16px',
+            backgroundColor: '#FFFFFF',
+            padding: '16px',
+            overflow: 'hidden'
+          }}
+        >
+          <OnboardingScreen onStart={handleStartQuiz} />
+        </div>
+      </div>
+    );
+  }
+
+  if (isComplete && !emailSubmitted) {
+    // Show results preview (blurred) with email overlay
+    const totalScore = calculateScore();
+    const maturityLevel = getResultMessage(totalScore);
+
+    return (
+      <div
+        style={{
+          position: 'relative',
+          minHeight: '100vh',
+          background: 'linear-gradient(180deg, #F9F5FF 0%, #FFFFFF 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px'
+        }}
+      >
+        {/* Blurred results preview in background */}
+        <div
+          style={{
+            maxWidth: '1066px',
+            width: '100%',
+            border: '1px solid rgba(0, 0, 0, 0.12)',
+            borderRadius: '16px',
+            backgroundColor: '#FFFFFF',
+            padding: '48px',
+            filter: 'blur(8px)',
+            pointerEvents: 'none'
+          }}
+        >
+          <h2
+            style={{
+              fontFamily: 'Inter Display',
+              fontSize: '48px',
+              fontWeight: 500,
+              color: '#201515',
+              textAlign: 'center',
+              marginBottom: '24px'
+            }}
+          >
+            You're at {maturityLevel}
+          </h2>
+          <p style={{ textAlign: 'center', fontSize: '18px', color: '#666' }}>
+            Your results are ready...
+          </p>
+        </div>
+
+        {/* Email form overlay */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            maxWidth: '600px',
+            width: 'calc(100% - 32px)',
+            backgroundColor: '#FFFFFF',
+            borderRadius: '16px',
+            padding: '48px',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+            border: '1px solid rgba(0, 0, 0, 0.1)'
+          }}
+        >
+          <h2
+            style={{
+              fontFamily: 'Inter Display',
+              fontSize: '32px',
+              fontWeight: 500,
+              color: '#201515',
+              textAlign: 'center',
+              marginBottom: '12px',
+              lineHeight: 1.2
+            }}
+          >
+            Almost there! We're getting your results ready.
+          </h2>
+
+          <p
+            style={{
+              fontFamily: 'Inter',
+              fontSize: '16px',
+              color: '#666',
+              textAlign: 'center',
+              marginBottom: '32px'
+            }}
+          >
+            Enter your details to see your IT maturity level
+          </p>
+
+          <form onSubmit={handleEmailSubmit} noValidate>
+            {/* Name field */}
+            <div style={{ marginBottom: '20px' }}>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Full name"
+                style={{
+                  width: '100%',
+                  padding: '16px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid #D9D9D9',
+                  fontFamily: 'Inter',
+                  fontSize: '16px',
+                  color: '#201515',
+                  outline: 'none',
+                  transition: 'border 200ms ease'
+                }}
+                onFocus={(e) => e.target.style.border = '1px solid #9966FF'}
+                onBlur={(e) => e.target.style.border = '1px solid #D9D9D9'}
+              />
             </div>
 
-            <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">
-              Almost there!
-            </h2>
-            <p className="text-lg text-gray-600 mb-8 text-center">
-              Enter your work email to see your IT maturity level results
-            </p>
+            {/* Email field */}
+            <div style={{ marginBottom: '32px' }}>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailError('');
+                }}
+                placeholder="Work email"
+                style={{
+                  width: '100%',
+                  padding: '16px 20px',
+                  borderRadius: '8px',
+                  border: emailError ? '1px solid #FF0000' : '1px solid #D9D9D9',
+                  fontFamily: 'Inter',
+                  fontSize: '16px',
+                  color: '#201515',
+                  outline: 'none',
+                  transition: 'border 200ms ease',
+                  backgroundColor: emailError ? '#FFF5F5' : '#FFFFFF'
+                }}
+                onFocus={(e) => !emailError && (e.target.style.border = '1px solid #9966FF')}
+                onBlur={(e) => !emailError && (e.target.style.border = '1px solid #D9D9D9')}
+              />
+              {emailError && (
+                <p style={{ color: '#FF0000', fontSize: '14px', marginTop: '8px', fontFamily: 'Inter' }}>
+                  {emailError}
+                </p>
+              )}
+            </div>
 
-            <form onSubmit={handleEmailSubmit} noValidate className="space-y-4">
-              <div>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setEmailError('');
-                  }}
-                  placeholder="your.email@company.com"
-                  className={`w-full px-6 py-4 rounded-2xl border-2 text-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all ${
-                    emailError
-                      ? 'border-red-300 bg-red-50'
-                      : 'border-gray-200 focus:border-primary-300'
-                  }`}
-                />
-                {emailError && (
-                  <p className="text-red-600 text-sm mt-3 ml-1 font-medium">{emailError}</p>
-                )}
-              </div>
+            {/* Submit button */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: isSubmitting ? '#B399FF' : '#8040F0',
+                color: '#FFFFFF',
+                fontFamily: 'Inter',
+                fontSize: '18px',
+                fontWeight: 600,
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                transition: 'background-color 200ms ease'
+              }}
+              onMouseEnter={(e) => !isSubmitting && (e.currentTarget.style.backgroundColor = '#6F35D1')}
+              onMouseLeave={(e) => !isSubmitting && (e.currentTarget.style.backgroundColor = '#8040F0')}
+            >
+              {isSubmitting ? 'Submitting...' : 'View My Results'}
+            </button>
+          </form>
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-primary-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-primary-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? 'Submitting...' : 'View My Results'}
-              </button>
-            </form>
-
-            <p className="text-sm text-gray-500 mt-6 text-center">
-              We respect your privacy. Your email will only be used to send you relevant information.
-            </p>
-          </div>
+          <p
+            style={{
+              fontFamily: 'Inter',
+              fontSize: '12px',
+              color: '#999',
+              textAlign: 'center',
+              marginTop: '20px'
+            }}
+          >
+            We respect your privacy. Your email will only be used to send you relevant information.
+          </p>
         </div>
       </div>
     );
@@ -302,9 +464,27 @@ export default function Quiz() {
     const maturityLevel = getResultMessage(totalScore);
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-primary-100 flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full">
-          <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 text-center animate-fade-in">
+      <div
+        style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(180deg, #F9F5FF 0%, #FFFFFF 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px'
+        }}
+      >
+        <div
+          style={{
+            maxWidth: '1066px',
+            width: '100%',
+            border: '1px solid rgba(0, 0, 0, 0.12)',
+            borderRadius: '16px',
+            backgroundColor: '#FFFFFF',
+            padding: '48px',
+            textAlign: 'center'
+          }}
+        >
             <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-8">
               <svg
                 className="w-10 h-10 text-primary-600"
@@ -620,7 +800,6 @@ export default function Quiz() {
               </button>
             </div>
           </div>
-        </div>
       </div>
     );
   }
@@ -628,95 +807,137 @@ export default function Quiz() {
   const question = quizData[currentQuestion];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-primary-100 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full">
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-600">
-              Question {currentQuestion + 1} of {quizData.length}
-            </span>
-            <span className="text-sm font-medium text-gray-600">
-              {Math.round(progress)}%
-            </span>
-          </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary-600 transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
-            />
+    <div
+      className="flex items-center justify-center p-4"
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(180deg, #F9F5FF 0%, #FFFFFF 100%)'
+      }}
+    >
+      <div
+        style={{
+          maxWidth: '1066px',
+          width: '100%',
+          border: '1px solid rgba(0, 0, 0, 0.12)',
+          borderRadius: '16px',
+          backgroundColor: '#FFFFFF',
+          padding: '64px',
+          transition: 'opacity 300ms ease-in-out',
+          opacity: isTransitioning ? 0 : 1
+        }}
+      >
+        {/* Segmented Progress Bar */}
+        <div style={{ marginBottom: '48px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {quizData.map((_, index) => (
+              <div
+                key={index}
+                style={{
+                  flex: 1,
+                  height: '8px',
+                  borderRadius: '4px',
+                  backgroundColor: index <= currentQuestion ? '#F37052' : '#D9D9D9',
+                  transition: 'background-color 300ms ease-in-out'
+                }}
+              />
+            ))}
           </div>
         </div>
 
-        {/* Question Card */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 animate-fade-in">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">
+        {/* Question */}
+        <div>
+          <h2
+            style={{
+              fontFamily: 'Inter Display',
+              fontSize: '48px',
+              fontWeight: 400,
+              letterSpacing: '-0.96px',
+              color: '#201515',
+              lineHeight: 1.3,
+              marginBottom: '48px'
+            }}
+          >
             {question.question}
           </h2>
 
           {/* Options */}
-          <div className="space-y-4 mb-8">
-            {question.options.map((option, index) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '94px' }}>
+            {question.options.map((option) => (
               <button
                 key={option.id}
                 onClick={() => handleOptionSelect(option.value)}
-                className={`w-full text-left p-6 rounded-2xl border-2 transition-all duration-200 transform hover:scale-[1.02] ${
-                  selectedOption === option.value
-                    ? 'border-primary-600 bg-primary-50 shadow-lg'
-                    : 'border-gray-200 hover:border-primary-300 bg-white'
-                }`}
                 style={{
-                  animationDelay: `${index * 100}ms`,
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '20px 24px',
+                  borderRadius: '10px',
+                  border: selectedOption === option.value ? '1px solid #9966FF' : '1px solid #D9D9D9',
+                  background: selectedOption === option.value
+                    ? 'linear-gradient(to right, #9966FF, #FF8FA3)'
+                    : '#FFFFFF',
+                  color: selectedOption === option.value ? '#FFFFFF' : '#201515',
+                  fontFamily: 'Inter',
+                  fontSize: '18px',
+                  fontWeight: 400,
+                  letterSpacing: '-0.072px',
+                  lineHeight: 1.5,
+                  cursor: 'pointer',
+                  transition: 'all 200ms ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px'
                 }}
               >
-                <div className="flex items-center">
-                  <div
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4 ${
-                      selectedOption === option.value
-                        ? 'border-primary-600 bg-primary-600'
-                        : 'border-gray-300'
-                    }`}
-                  >
-                    {selectedOption === option.value && (
-                      <div className="w-2 h-2 bg-white rounded-full" />
-                    )}
-                  </div>
-                  <span
-                    className={`text-lg font-medium ${
-                      selectedOption === option.value
-                        ? 'text-primary-900'
-                        : 'text-gray-700'
-                    }`}
-                  >
-                    {option.text}
-                  </span>
+                {/* Radio button */}
+                <div
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    border: selectedOption === option.value ? '2px solid #FFFFFF' : '2px solid #D9D9D9',
+                    backgroundColor: selectedOption === option.value ? 'transparent' : '#FFFFFF',
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  {selectedOption === option.value && (
+                    <div
+                      style={{
+                        width: '12px',
+                        height: '12px',
+                        borderRadius: '50%',
+                        backgroundColor: '#FFFFFF'
+                      }}
+                    />
+                  )}
                 </div>
+                <span>{option.text}</span>
               </button>
             ))}
           </div>
 
-          {/* Navigation Buttons */}
-          <div className="flex gap-4">
-            {currentQuestion > 0 && (
-              <button
-                onClick={handlePrevious}
-                className="flex-1 px-6 py-3 rounded-full border-2 border-gray-300 text-gray-700 font-semibold hover:border-gray-400 hover:bg-gray-50 transition-colors"
-              >
-                Previous
-              </button>
-            )}
+          {/* Back Button */}
+          {currentQuestion > 0 && (
             <button
-              onClick={handleNext}
-              disabled={!selectedOption}
-              className={`flex-1 px-6 py-3 rounded-full font-semibold transition-all ${
-                selectedOption
-                  ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
+              onClick={handlePrevious}
+              style={{
+                padding: '16px 40px',
+                borderRadius: '8px',
+                border: '1px solid #C1C1C1',
+                backgroundColor: '#FFFFFF',
+                color: '#201515',
+                fontFamily: 'Inter',
+                fontSize: '16px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'all 200ms ease'
+              }}
             >
-              {currentQuestion === quizData.length - 1 ? 'Complete' : 'Next'}
+              Back
             </button>
-          </div>
+          )}
         </div>
       </div>
     </div>
