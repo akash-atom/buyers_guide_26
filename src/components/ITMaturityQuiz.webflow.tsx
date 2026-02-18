@@ -328,40 +328,28 @@ function ITMaturityQuiz() {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            maxWidth: '600px',
+            maxWidth: '900px',
             width: 'calc(100% - 32px)',
-            backgroundColor: '#FFFFFF',
-            borderRadius: '16px',
-            padding: '48px',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
-            border: '1px solid rgba(0, 0, 0, 0.1)'
+            padding: '48px'
           }}
         >
           <h2
             style={{
               fontFamily: 'Inter Display',
-              fontSize: '32px',
-              fontWeight: 500,
-              color: '#201515',
+              fontSize: '56px',
+              fontWeight: 400,
+              color: '#000000',
               textAlign: 'center',
-              marginBottom: '12px',
-              lineHeight: 1.2
-            }}
+              marginBottom: '32px',
+              lineHeight: 1.2,
+              letterSpacing: '-0.02em',
+              maxWidth: '850px',
+              margin: '0 auto 32px auto',
+              textWrap: 'balance'
+            } as React.CSSProperties}
           >
             Almost there! We're getting your results ready.
           </h2>
-
-          <p
-            style={{
-              fontFamily: 'Inter',
-              fontSize: '16px',
-              color: '#666',
-              textAlign: 'center',
-              marginBottom: '32px'
-            }}
-          >
-            Enter your details to see your IT maturity level
-          </p>
 
           <form onSubmit={handleEmailSubmit} noValidate>
             {/* Name field */}
@@ -428,32 +416,19 @@ function ITMaturityQuiz() {
                 padding: '16px',
                 borderRadius: '8px',
                 border: 'none',
-                backgroundColor: isSubmitting ? '#B399FF' : '#8040F0',
+                backgroundColor: '#8040F0',
                 color: '#FFFFFF',
                 fontFamily: 'Inter',
                 fontSize: '18px',
                 fontWeight: 600,
                 cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                transition: 'background-color 200ms ease'
+                transition: 'background-color 200ms ease',
+                opacity: isSubmitting ? 0.6 : 1
               }}
-              onMouseEnter={(e) => !isSubmitting && (e.currentTarget.style.backgroundColor = '#6F35D1')}
-              onMouseLeave={(e) => !isSubmitting && (e.currentTarget.style.backgroundColor = '#8040F0')}
             >
-              {isSubmitting ? 'Submitting...' : 'View My Results'}
+              {isSubmitting ? 'Submitting...' : 'View my result'}
             </button>
           </form>
-
-          <p
-            style={{
-              fontFamily: 'Inter',
-              fontSize: '12px',
-              color: '#999',
-              textAlign: 'center',
-              marginTop: '20px'
-            }}
-          >
-            We respect your privacy. Your email will only be used to send you relevant information.
-          </p>
         </div>
       </div>
     );
