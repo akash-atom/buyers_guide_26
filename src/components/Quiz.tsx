@@ -705,83 +705,78 @@ export default function Quiz() {
               </div>
             </div>
 
-            {/* Ticket Composition Section */}
+            {/* Divider line */}
+            <div style={{ width: '100%', height: '1px', backgroundColor: '#D9D9D9', marginTop: '32px', marginBottom: '32px' }}></div>
+
+            {/* Second Row - Goal-Based Recommendations */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '32px' }}>
+              <h3
+                style={{
+                  textTransform: 'uppercase',
+                  fontFamily: 'Inter',
+                  fontWeight: 500,
+                  fontSize: '11px',
+                  letterSpacing: '11px',
+                  color: '#4A5565',
+                  backgroundColor: 'rgba(201, 201, 201, 0.36)',
+                  padding: '2px 10px'
+                }}
+              >
+                Goal-Based Recommendations
+              </h3>
+            </div>
+
+            {/* Priority and Insight based on maturity level and selected goal */}
             {maturityLevel === 'Reactive IT' && (
-              <div className="mb-8">
-
-                <div className="bg-gray-50 rounded-xl p-6 text-left">
-                  <h3 className="font-bold text-gray-900 mb-4">Ticket Composition:</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Deflectable:</span>
-                        <span className="text-gray-600">40-50% of tickets handled manually</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Automatable:</span>
-                        <span className="text-gray-600">20-30% requiring human routing</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Expert:</span>
-                        <span className="text-gray-600">30-40% but agents rarely get to focus here</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Show additional content based on question 4 answer */}
+              <div>
                 {answers[3] === 'option_1' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Simple AI deflection, fast implementation, low admin overhead</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Simple AI deflection, fast implementation, low admin overhead</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">At 1,000 deflectable tickets/month, effective AI can reclaim 250-500 hours of agent time.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>At 1,000 deflectable tickets/month, effective AI can reclaim 250-500 hours of agent time.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_2' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Slack/Teams-native, consumer-simple UX, mobile-first</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Slack/Teams-native, consumer-simple UX, mobile-first</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Employees shouldn't need training to get help. Meet them where they already work.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Employees shouldn't need training to get help. Meet them where they already work.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_3' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Start with deflection before workflow automation</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Start with deflection before workflow automation</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Reduce volume first—then you'll have capacity to build automation.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Reduce volume first—then you'll have capacity to build automation.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_4' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Quick wins with AI deflection to build momentum</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Quick wins with AI deflection to build momentum</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Demonstrate ROI with measurable ticket reduction before larger transformation.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Demonstrate ROI with measurable ticket reduction before larger transformation.</div>
                     </div>
                   </div>
                 )}
@@ -789,84 +784,55 @@ export default function Quiz() {
             )}
 
             {maturityLevel === 'Structured IT' && (
-              <div className="max-w-xl mx-auto mb-8">
-                <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                  You've started deflecting easy stuff, but agents still spend significant time on automatable work with manual handoffs between systems.
-                </p>
-
-                <div className="bg-gray-50 rounded-xl p-6 text-left">
-                  <h3 className="font-bold text-gray-900 mb-4">Ticket Composition:</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Deflectable:</span>
-                        <span className="text-gray-600">30-50% now deflected</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Automatable:</span>
-                        <span className="text-gray-600">Still mostly manual execution</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Expert:</span>
-                        <span className="text-gray-600">Agents have more capacity but still interrupted</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Show additional content based on question 4 answer */}
+              <div>
                 {answers[3] === 'option_1' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Production-ready AI with proven deflection rates, workflow automation</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Production-ready AI with proven deflection rates, workflow automation</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Every automated workflow saves 10-20 minutes per execution.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Every automated workflow saves 10-20 minutes per execution.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_2' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Seamless handoffs, proactive notifications, self-service workflows</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Seamless handoffs, proactive notifications, self-service workflows</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Employees feel the friction of manual handoffs. Smooth the edges.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Employees feel the friction of manual handoffs. Smooth the edges.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_3' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">ESM capabilities, low-code workflows, strong integrations</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>ESM capabilities, low-code workflows, strong integrations</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Extend service management beyond IT without proportional headcount.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Extend service management beyond IT without proportional headcount.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_4' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">API-first platforms that integrate with your ecosystem</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>API-first platforms that integrate with your ecosystem</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Avoid rip-and-replace. Composable platforms let you modernize incrementally.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Avoid rip-and-replace. Composable platforms let you modernize incrementally.</div>
                     </div>
                   </div>
                 )}
@@ -874,127 +840,60 @@ export default function Quiz() {
             )}
 
             {maturityLevel === 'Optimized IT' && (
-              <div className="max-w-xl mx-auto mb-8">
-                <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                  You've automated the routine. Agents focus on work that genuinely requires expertise—complex troubleshooting, architecture, strategic initiatives.
-                </p>
-
-                <div className="bg-gray-50 rounded-xl p-6 text-left">
-                  <h3 className="font-bold text-gray-900 mb-4">Ticket Composition:</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Deflectable:</span>
-                        <span className="text-gray-600">80-90% autonomously resolved</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Automatable:</span>
-                        <span className="text-gray-600">60-80% handled by workflows</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Expert:</span>
-                        <span className="text-gray-600">Agents spend 70%+ of time here</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Show additional content based on question 4 answer */}
+              <div>
                 {answers[3] === 'option_1' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Advanced AI for edge cases, predictive capabilities</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Advanced AI for edge cases, predictive capabilities</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">You've handled the obvious—now tackle the long tail.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>You've handled the obvious—now tackle the long tail.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_2' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Proactive service, personalization, cross-department consistency</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Proactive service, personalization, cross-department consistency</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Move from reactive to anticipatory service delivery.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Move from reactive to anticipatory service delivery.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_3' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Federated architecture, enterprise-wide ESM</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Federated architecture, enterprise-wide ESM</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Your model works—now extend it systematically across the organization.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Your model works—now extend it systematically across the organization.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_4' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Composable architecture, consumption analytics, transparent TCO</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Composable architecture, consumption analytics, transparent TCO</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Value shifts from cost reduction to capacity creation for strategic work.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Value shifts from cost reduction to capacity creation for strategic work.</div>
                     </div>
                   </div>
                 )}
               </div>
             )}
-
-            {/* Action Button */}
-            <div className="mt-8">
-              <button
-                onClick={() => {
-                  // Dispatch custom event to communicate with Webflow
-                  window.dispatchEvent(new CustomEvent('showReport', {
-                    detail: {
-                      maturityLevel: maturityLevel,
-                      score: totalScore,
-                      email: email,
-                      answers: answers,
-                      selectedGoal: answers[3], // Question 4 answer
-                      timestamp: new Date().toISOString()
-                    }
-                  }));
-                  console.log('Report event dispatched:', {
-                    maturityLevel,
-                    score: totalScore,
-                    selectedGoal: answers[3]
-                  });
-
-                  // Auto-scroll to first section of report
-                  setTimeout(() => {
-                    const firstSection = document.querySelector('#section-intro');
-                    if (firstSection) {
-                      firstSection.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                      });
-                    }
-                  }, 150);
-                }}
-                className="bg-primary-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-primary-700 transition-colors"
-              >
-                Read the report
-              </button>
-            </div>
           </div>
       </div>
     );
