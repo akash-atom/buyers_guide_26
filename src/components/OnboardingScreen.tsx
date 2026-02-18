@@ -55,7 +55,8 @@ export default function OnboardingScreen({ onStart }: OnboardingScreenProps) {
           padding: '16px 24px',
           lineHeight: 1,
           textAlign: 'right',
-          background: 'linear-gradient(to right, #9966FF, #5C3D99)'
+          background: 'linear-gradient(to right, #9966FF, #5C3D99)',
+          cursor: 'pointer'
         }}
       >
         Let's find out →
