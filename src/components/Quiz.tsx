@@ -828,6 +828,32 @@ export default function Quiz() {
       >
         {/* Segmented Progress Bar */}
         <div style={{ marginBottom: '48px' }}>
+          {/* Step count and percentage */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <span
+              style={{
+                fontFamily: 'Inter',
+                fontWeight: 500,
+                fontSize: '14px',
+                color: '#201515',
+                letterSpacing: '-0.15px'
+              }}
+            >
+              Step {currentQuestion + 1} of {quizData.length}
+            </span>
+            <span
+              style={{
+                fontFamily: 'Inter',
+                fontWeight: 500,
+                fontSize: '14px',
+                color: '#201515',
+                letterSpacing: '-0.15px'
+              }}
+            >
+              {Math.round(progress)}%
+            </span>
+          </div>
+          {/* Progress bars */}
           <div style={{ display: 'flex', gap: '8px' }}>
             {quizData.map((_, index) => (
               <div
@@ -835,7 +861,7 @@ export default function Quiz() {
                 style={{
                   flex: 1,
                   height: '8px',
-                  borderRadius: '4px',
+                  borderRadius: '0px',
                   backgroundColor: index <= currentQuestion ? '#F37052' : '#D9D9D9',
                   transition: 'background-color 300ms ease-in-out'
                 }}

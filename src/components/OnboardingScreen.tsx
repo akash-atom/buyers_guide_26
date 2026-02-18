@@ -46,6 +46,7 @@ export default function OnboardingScreen({ onStart }: OnboardingScreenProps) {
           marginTop: '32px',
           marginLeft: '-16px',
           marginRight: '-16px',
+          marginBottom: '-16px',
           width: 'calc(100% + 32px)',
           fontFamily: 'Inter Display',
           fontWeight: 500,
