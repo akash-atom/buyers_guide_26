@@ -597,7 +597,7 @@ export default function Quiz() {
               {/* Right Column - SVG Visualization - All 3 stacked */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0px' }}>
                 {/* Optimized IT - Top */}
-                <div style={{ opacity: maturityLevel === 'Optimized IT' ? 1 : 0.3, transition: 'opacity 300ms ease', position: 'relative', marginBottom: '-40px', zIndex: 3 }}>
+                <div style={{ filter: maturityLevel === 'Optimized IT' ? 'none' : 'saturate(0.2) brightness(1.3) contrast(0.8)', transition: 'filter 300ms ease', position: 'relative', marginBottom: '-85px', zIndex: 3 }}>
                   <svg width="273" height="165" viewBox="0 0 273 165" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="156.941" height="156.941" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0.309082 86.1445)" fill="url(#paint0_linear_796_3068)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
                     <rect width="156.941" height="156.941" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 78.4688)" fill="url(#paint1_linear_796_3068)" stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
@@ -613,10 +613,14 @@ export default function Quiz() {
                       </linearGradient>
                     </defs>
                   </svg>
+                  {/* Text overlay */}
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Optimized IT' ? '#FFFFFF' : '#868686', transition: 'color 300ms ease' }}>
+                    Optimized IT
+                  </div>
                 </div>
 
                 {/* Structured IT - Middle */}
-                <div style={{ opacity: maturityLevel === 'Structured IT' ? 1 : 0.3, transition: 'opacity 300ms ease', position: 'relative', marginBottom: '-50px', zIndex: 2 }}>
+                <div style={{ filter: maturityLevel === 'Structured IT' ? 'none' : 'saturate(0.2) brightness(1.3) contrast(0.8)', transition: 'filter 300ms ease', position: 'relative', marginBottom: '-110px', zIndex: 2 }}>
                   <svg width="334" height="201" viewBox="0 0 334 201" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="192.376" height="192.376" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0.147461 104.18)" fill="url(#paint0_linear_796_3082)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
                     <g filter="url(#filter0_n_796_3082)">
@@ -651,10 +655,14 @@ export default function Quiz() {
                       </linearGradient>
                     </defs>
                   </svg>
+                  {/* Text overlay */}
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Structured IT' ? '#FFFFFF' : '#868686', transition: 'color 300ms ease' }}>
+                    Structured IT
+                  </div>
                 </div>
 
                 {/* Reactive IT - Bottom */}
-                <div style={{ opacity: maturityLevel === 'Reactive IT' ? 1 : 0.3, transition: 'opacity 300ms ease', position: 'relative', zIndex: 1 }}>
+                <div style={{ filter: maturityLevel === 'Reactive IT' ? 'none' : 'saturate(0.2) brightness(1.3) contrast(0.8)', transition: 'filter 300ms ease', position: 'relative', zIndex: 1 }}>
                   <svg width="418" height="253" viewBox="0 0 418 253" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="241.044" height="241.044" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 131.535)" fill="url(#paint0_linear_796_3086)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
                     <g filter="url(#filter0_n_796_3086)">
@@ -689,6 +697,10 @@ export default function Quiz() {
                       </linearGradient>
                     </defs>
                   </svg>
+                  {/* Text overlay */}
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Reactive IT' ? '#FFFFFF' : '#868686', transition: 'color 300ms ease' }}>
+                    Reactive IT
+                  </div>
                 </div>
               </div>
             </div>
