@@ -595,9 +595,10 @@ function ITMaturityQuiz() {
                 </button>
               </div>
 
-              {/* Right Column - SVG Visualization */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                {maturityLevel === 'Optimized IT' && (
+              {/* Right Column - SVG Visualization - All 3 stacked */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0px' }}>
+                {/* Optimized IT - Top */}
+                <div style={{ opacity: maturityLevel === 'Optimized IT' ? 1 : 0.3, transition: 'opacity 300ms ease', position: 'relative', marginBottom: '-40px', zIndex: 3 }}>
                   <svg width="273" height="165" viewBox="0 0 273 165" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="156.941" height="156.941" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0.309082 86.1445)" fill="url(#paint0_linear_796_3068_webflow)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
                     <rect width="156.941" height="156.941" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 78.4688)" fill="url(#paint1_linear_796_3068_webflow)" stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
@@ -613,9 +614,10 @@ function ITMaturityQuiz() {
                       </linearGradient>
                     </defs>
                   </svg>
-                )}
+                </div>
 
-                {maturityLevel === 'Structured IT' && (
+                {/* Structured IT - Middle */}
+                <div style={{ opacity: maturityLevel === 'Structured IT' ? 1 : 0.3, transition: 'opacity 300ms ease', position: 'relative', marginBottom: '-50px', zIndex: 2 }}>
                   <svg width="334" height="201" viewBox="0 0 334 201" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="192.376" height="192.376" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0.147461 104.18)" fill="url(#paint0_linear_796_3082_webflow)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
                     <g filter="url(#filter0_n_796_3082_webflow)">
@@ -650,9 +652,10 @@ function ITMaturityQuiz() {
                       </linearGradient>
                     </defs>
                   </svg>
-                )}
+                </div>
 
-                {maturityLevel === 'Reactive IT' && (
+                {/* Reactive IT - Bottom */}
+                <div style={{ opacity: maturityLevel === 'Reactive IT' ? 1 : 0.3, transition: 'opacity 300ms ease', position: 'relative', zIndex: 1 }}>
                   <svg width="418" height="253" viewBox="0 0 418 253" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="241.044" height="241.044" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 131.535)" fill="url(#paint0_linear_796_3086_webflow)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
                     <g filter="url(#filter0_n_796_3086_webflow)">
@@ -687,7 +690,7 @@ function ITMaturityQuiz() {
                       </linearGradient>
                     </defs>
                   </svg>
-                )}
+                </div>
               </div>
             </div>
 
