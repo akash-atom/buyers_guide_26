@@ -457,36 +457,287 @@ export default function Quiz() {
             borderRadius: '16px',
             backgroundColor: '#FFFFFF',
             padding: '48px',
-            textAlign: 'center'
+            textAlign: 'left'
           }}
         >
-            <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-8">
-              <svg
-                className="w-10 h-10 text-primary-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+            {/* First Row - 2 Column Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', marginBottom: '48px' }}>
+              {/* Left Column - Content */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                {/* "Your result" heading */}
+                <h3
+                  style={{
+                    textTransform: 'uppercase',
+                    fontFamily: 'Inter',
+                    fontWeight: 500,
+                    fontSize: '11px',
+                    letterSpacing: '11px',
+                    color: '#4A5565',
+                    marginBottom: '18px',
+                    backgroundColor: 'rgba(168, 171, 255, 0.36)',
+                    padding: '2px 10px'
+                  }}
+                >
+                  Your result
+                </h3>
+
+                {/* Maturity Level */}
+                <h2
+                  style={{
+                    fontFamily: 'Inter Display',
+                    fontWeight: 500,
+                    fontSize: '48px',
+                    letterSpacing: '-0.02em',
+                    color: '#201515',
+                    marginBottom: '18px'
+                  }}
+                >
+                  {maturityLevel}
+                </h2>
+
+                {/* Description based on maturity level */}
+                {maturityLevel === 'Reactive IT' && (
+                  <p
+                    style={{
+                      fontFamily: 'Inter Display',
+                      fontWeight: 400,
+                      fontSize: '18px',
+                      letterSpacing: '-0.004em',
+                      color: '#201515',
+                      lineHeight: 1.6,
+                      marginBottom: '18px'
+                    }}
+                  >
+                    Your agents are handling work that AI and automation could deflect. Every ticket deflected saves 15-30 minutes of agent time.
+                  </p>
+                )}
+
+                {maturityLevel === 'Structured IT' && (
+                  <p
+                    style={{
+                      fontFamily: 'Inter Display',
+                      fontWeight: 400,
+                      fontSize: '18px',
+                      letterSpacing: '-0.004em',
+                      color: '#201515',
+                      lineHeight: 1.6,
+                      marginBottom: '18px'
+                    }}
+                  >
+                    You've started deflecting easy stuff, but agents still spend significant time on automatable work with manual handoffs between systems.
+                  </p>
+                )}
+
+                {maturityLevel === 'Optimized IT' && (
+                  <p
+                    style={{
+                      fontFamily: 'Inter Display',
+                      fontWeight: 400,
+                      fontSize: '18px',
+                      letterSpacing: '-0.004em',
+                      color: '#201515',
+                      lineHeight: 1.6,
+                      marginBottom: '18px'
+                    }}
+                  >
+                    You've automated the routine. Agents focus on work that genuinely requires expertise—complex troubleshooting, architecture, strategic initiatives.
+                  </p>
+                )}
+
+                {/* CTA Button */}
+                <button
+                  onClick={() => {
+                    // Dispatch custom event to communicate with Webflow
+                    window.dispatchEvent(new CustomEvent('showReport', {
+                      detail: {
+                        maturityLevel: maturityLevel,
+                        score: totalScore,
+                        email: email,
+                        answers: answers,
+                        selectedGoal: answers[3],
+                        timestamp: new Date().toISOString()
+                      }
+                    }));
+                    console.log('Report event dispatched:', {
+                      maturityLevel,
+                      score: totalScore,
+                      selectedGoal: answers[3]
+                    });
+
+                    // Auto-scroll to first section of report
+                    setTimeout(() => {
+                      const firstSection = document.querySelector('#section-intro');
+                      if (firstSection) {
+                        firstSection.scrollIntoView({
+                          behavior: 'smooth',
+                          block: 'start'
+                        });
+                      }
+                    }, 150);
+                  }}
+                  style={{
+                    fontFamily: 'Inter',
+                    fontSize: '20px',
+                    fontWeight: 600,
+                    color: '#FFFFFF',
+                    backgroundColor: '#8040F0',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '18px 28px',
+                    cursor: 'pointer',
+                    transition: 'background-color 200ms ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6F35D1'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#8040F0'}
+                >
+                  Read the complete guide {'->'}
+                </button>
+              </div>
+
+              {/* Right Column - SVG Visualization */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                {maturityLevel === 'Optimized IT' && (
+                  <div style={{ position: 'relative' }}>
+                    <svg width="273" height="165" viewBox="0 0 273 165" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="156.941" height="156.941" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0.309082 86.1445)" fill="url(#paint0_linear_796_3068)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
+                      <rect width="156.941" height="156.941" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 78.4688)" fill="url(#paint1_linear_796_3068)" stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
+                      <defs>
+                        <linearGradient id="paint0_linear_796_3068" x1="78.4703" y1="0" x2="78.4703" y2="156.941" gradientUnits="userSpaceOnUse">
+                          <stop stopColor="#D8D8D8"/>
+                          <stop offset="0.504808" stopColor="white"/>
+                          <stop offset="1" stopColor="#D8D8D8"/>
+                        </linearGradient>
+                        <linearGradient id="paint1_linear_796_3068" x1="152.683" y1="4.12785" x2="-0.317485" y2="157.128" gradientUnits="userSpaceOnUse">
+                          <stop offset="0.226929" stopColor="#4AB583"/>
+                          <stop offset="1" stopColor="#CEFFDE"/>
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    {/* Text overlays for Optimized IT */}
+                    <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#1a5c3a' }}>Deflectable</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#1a5c3a' }}>80-90%</div>
+                    </div>
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#1a5c3a' }}>Automatable</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#1a5c3a' }}>60-80%</div>
+                    </div>
+                    <div style={{ position: 'absolute', top: '70%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#1a5c3a' }}>Expert</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#1a5c3a' }}>70%+</div>
+                    </div>
+                  </div>
+                )}
+
+                {maturityLevel === 'Structured IT' && (
+                  <div style={{ position: 'relative' }}>
+                    <svg width="334" height="201" viewBox="0 0 334 201" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="192.376" height="192.376" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0.147461 104.18)" fill="url(#paint0_linear_796_3082)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
+                      <g filter="url(#filter0_n_796_3082)">
+                        <rect width="192.376" height="192.376" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 96.1875)" fill="url(#paint1_linear_796_3082)"/>
+                        <rect width="192.376" height="192.376" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 96.1875)" stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
+                      </g>
+                      <defs>
+                        <filter id="filter0_n_796_3082" x="7.54248" y="4.35547" width="318.12" height="183.664" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                          <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                          <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                          <feTurbulence type="fractalNoise" baseFrequency="2 2" stitchTiles="stitch" numOctaves="3" result="noise" seed="936" />
+                          <feColorMatrix in="noise" type="luminanceToAlpha" result="alphaNoise" />
+                          <feComponentTransfer in="alphaNoise" result="coloredNoise1">
+                            <feFuncA type="discrete" tableValues="1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
+                          </feComponentTransfer>
+                          <feComposite operator="in" in2="shape" in="coloredNoise1" result="noise1Clipped" />
+                          <feFlood floodColor="rgba(50, 11, 117, 0.15)" result="color1Flood" />
+                          <feComposite operator="in" in2="noise1Clipped" in="color1Flood" result="color1" />
+                          <feMerge result="effect1_noise_796_3082">
+                            <feMergeNode in="shape" />
+                            <feMergeNode in="color1" />
+                          </feMerge>
+                        </filter>
+                        <linearGradient id="paint0_linear_796_3082" x1="96.188" y1="0" x2="96.188" y2="192.376" gradientUnits="userSpaceOnUse">
+                          <stop stopColor="#D8D8D8"/>
+                          <stop offset="0.504808" stopColor="white"/>
+                          <stop offset="1" stopColor="#D8D8D8"/>
+                        </linearGradient>
+                        <linearGradient id="paint1_linear_796_3082" x1="187.157" y1="5.05987" x2="-0.38917" y2="192.606" gradientUnits="userSpaceOnUse">
+                          <stop offset="0.226929" stopColor="#392064"/>
+                          <stop offset="1" stopColor="#8E7BFF"/>
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    {/* Text overlays for Structured IT */}
+                    <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#392064' }}>Deflectable</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#392064' }}>30-50%</div>
+                    </div>
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#392064' }}>Automatable</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#392064' }}>Mostly manual</div>
+                    </div>
+                    <div style={{ position: 'absolute', top: '70%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#392064' }}>Expert</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#392064' }}>More capacity</div>
+                    </div>
+                  </div>
+                )}
+
+                {maturityLevel === 'Reactive IT' && (
+                  <div style={{ position: 'relative' }}>
+                    <svg width="418" height="253" viewBox="0 0 418 253" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="241.044" height="241.044" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 131.535)" fill="url(#paint0_linear_796_3086)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
+                      <g filter="url(#filter0_n_796_3086)">
+                        <path d="M13.2761 128.184C5.94391 123.951 5.94391 117.088 13.2761 112.855L195.475 7.66227C202.807 3.42903 214.695 3.42903 222.027 7.66227L404.225 112.855C411.557 117.088 411.557 123.951 404.225 128.184L222.027 233.377C214.695 237.61 202.807 237.61 195.475 233.377L13.2761 128.184Z" fill="url(#paint1_linear_796_3086)"/>
+                        <path d="M13.2761 128.184C5.94391 123.951 5.94391 117.088 13.2761 112.855L195.475 7.66227C202.807 3.42903 214.695 3.42903 222.027 7.66227L404.225 112.855C411.557 117.088 411.557 123.951 404.225 128.184L222.027 233.377C214.695 237.61 202.807 237.61 195.475 233.377L13.2761 128.184Z" stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
+                      </g>
+                      <defs>
+                        <filter id="filter0_n_796_3086" x="7.54248" y="4.35156" width="402.417" height="232.336" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                          <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                          <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                          <feTurbulence type="fractalNoise" baseFrequency="2 2" stitchTiles="stitch" numOctaves="3" result="noise" seed="936" />
+                          <feColorMatrix in="noise" type="luminanceToAlpha" result="alphaNoise" />
+                          <feComponentTransfer in="alphaNoise" result="coloredNoise1">
+                            <feFuncA type="discrete" tableValues="1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
+                          </feComponentTransfer>
+                          <feComposite operator="in" in2="shape" in="coloredNoise1" result="noise1Clipped" />
+                          <feFlood floodColor="rgba(50, 11, 117, 0.15)" result="color1Flood" />
+                          <feComposite operator="in" in2="noise1Clipped" in="color1Flood" result="color1" />
+                          <feMerge result="effect1_noise_796_3086">
+                            <feMergeNode in="shape" />
+                            <feMergeNode in="color1" />
+                          </feMerge>
+                        </filter>
+                        <linearGradient id="paint0_linear_796_3086" x1="120.522" y1="0" x2="120.522" y2="241.044" gradientUnits="userSpaceOnUse">
+                          <stop stopColor="#D8D8D8"/>
+                          <stop offset="0.504808" stopColor="white"/>
+                          <stop offset="1" stopColor="#D8D8D8"/>
+                        </linearGradient>
+                        <linearGradient id="paint1_linear_796_3086" x1="208.577" y1="6.43726" x2="208.577" y2="241.429" gradientUnits="userSpaceOnUse">
+                          <stop offset="0.226929" stopColor="#392064"/>
+                          <stop offset="1" stopColor="#8E7BFF"/>
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    {/* Text overlays for Reactive IT */}
+                    <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#392064' }}>Deflectable</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#392064' }}>40-50%</div>
+                    </div>
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#392064' }}>Automatable</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#392064' }}>20-30%</div>
+                    </div>
+                    <div style={{ position: 'absolute', top: '70%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                      <div style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#392064' }}>Expert</div>
+                      <div style={{ fontFamily: 'Inter', fontSize: '18px', fontWeight: 700, color: '#392064' }}>30-40%</div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Result Level */}
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">
-              You're at {maturityLevel}
-            </h2>
-
-            {/* Description based on maturity level */}
+            {/* Ticket Composition Section */}
             {maturityLevel === 'Reactive IT' && (
-              <div className="max-w-xl mx-auto mb-8">
-                <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                  Your agents are handling work that AI and automation could deflect. Every ticket deflected saves 15-30 minutes of agent time.
-                </p>
+              <div className="mb-8">
 
                 <div className="bg-gray-50 rounded-xl p-6 text-left">
                   <h3 className="font-bold text-gray-900 mb-4">Ticket Composition:</h3>
