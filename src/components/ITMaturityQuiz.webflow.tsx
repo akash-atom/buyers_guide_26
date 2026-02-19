@@ -291,7 +291,7 @@ function ITMaturityQuiz() {
           padding: '16px'
         }}
       >
-        {/* Blurred results preview in background */}
+        {/* Blurred results preview in background - actual results content */}
         <div
           style={{
             maxWidth: '1066px',
@@ -301,24 +301,180 @@ function ITMaturityQuiz() {
             backgroundColor: '#FFFFFF',
             padding: '48px',
             filter: 'blur(8px)',
-            pointerEvents: 'none'
+            pointerEvents: 'none',
+            textAlign: 'left'
           }}
         >
-          <h2
-            style={{
-              fontFamily: 'Inter Display',
-              fontSize: '48px',
-              fontWeight: 500,
-              color: '#201515',
-              textAlign: 'center',
-              marginBottom: '24px'
-            }}
-          >
-            You're at {maturityLevel}
-          </h2>
-          <p style={{ textAlign: 'center', fontSize: '18px', color: '#666' }}>
-            Your results are ready...
-          </p>
+            {/* First Row - 2 Column Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', marginBottom: '48px' }}>
+              {/* Left Column - Content */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                {/* "Your result" heading */}
+                <h3
+                  style={{
+                    textTransform: 'uppercase',
+                    fontFamily: 'Inter',
+                    fontWeight: 500,
+                    fontSize: '11px',
+                    letterSpacing: '11px',
+                    color: '#4A5565',
+                    marginBottom: '18px',
+                    backgroundColor: 'rgba(168, 171, 255, 0.36)',
+                    padding: '2px 10px'
+                  }}
+                >
+                  Your result
+                </h3>
+
+                {/* Maturity Level */}
+                <h2
+                  style={{
+                    fontFamily: 'Inter Display',
+                    fontWeight: 500,
+                    fontSize: '48px',
+                    letterSpacing: '-0.02em',
+                    color: '#201515',
+                    marginBottom: '18px'
+                  }}
+                >
+                  {maturityLevel}
+                </h2>
+
+                {/* Description based on maturity level */}
+                {maturityLevel === 'Reactive IT' && (
+                  <p
+                    style={{
+                      fontFamily: 'Inter Display',
+                      fontWeight: 400,
+                      fontSize: '18px',
+                      letterSpacing: '-0.004em',
+                      color: '#201515',
+                      lineHeight: 1.6,
+                      marginBottom: '18px'
+                    }}
+                  >
+                    Your agents are handling work that AI and automation could deflect. Every ticket deflected saves 15-30 minutes of agent time.
+                  </p>
+                )}
+
+                {maturityLevel === 'Structured IT' && (
+                  <p
+                    style={{
+                      fontFamily: 'Inter Display',
+                      fontWeight: 400,
+                      fontSize: '18px',
+                      letterSpacing: '-0.004em',
+                      color: '#201515',
+                      lineHeight: 1.6,
+                      marginBottom: '18px'
+                    }}
+                  >
+                    You've started deflecting easy stuff, but agents still spend significant time on automatable work with manual handoffs between systems.
+                  </p>
+                )}
+
+                {maturityLevel === 'Optimized IT' && (
+                  <p
+                    style={{
+                      fontFamily: 'Inter Display',
+                      fontWeight: 400,
+                      fontSize: '18px',
+                      letterSpacing: '-0.004em',
+                      color: '#201515',
+                      lineHeight: 1.6,
+                      marginBottom: '18px'
+                    }}
+                  >
+                    You've automated the routine. Agents focus on work that genuinely requires expertise—complex troubleshooting, architecture, strategic initiatives.
+                  </p>
+                )}
+
+                {/* CTA Button placeholder */}
+                <div
+                  style={{
+                    fontFamily: 'Inter',
+                    fontSize: '20px',
+                    fontWeight: 600,
+                    color: '#FFFFFF',
+                    backgroundColor: '#8040F0',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '18px 28px'
+                  }}
+                >
+                  Read the complete guide {'->'}
+                </div>
+              </div>
+
+              {/* Right Column - SVG Visualization placeholder */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0px' }}>
+                {/* Optimized IT - Top */}
+                <div style={{ filter: maturityLevel === 'Optimized IT' ? 'none' : 'saturate(0.2) brightness(1.3) contrast(0.8)', position: 'relative', marginBottom: '-85px', zIndex: 3 }}>
+                  <svg width="273" height="165" viewBox="0 0 273 165" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="156.941" height="156.941" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0.309082 86.1445)" fill="url(#paint0_linear_preview1_wf)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
+                    <rect width="156.941" height="156.941" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 78.4688)" fill="url(#paint1_linear_preview1_wf)" stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
+                    <defs>
+                      <linearGradient id="paint0_linear_preview1_wf" x1="78.4703" y1="0" x2="78.4703" y2="156.941" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#D8D8D8"/>
+                        <stop offset="0.504808" stopColor="white"/>
+                        <stop offset="1" stopColor="#D8D8D8"/>
+                      </linearGradient>
+                      <linearGradient id="paint1_linear_preview1_wf" x1="152.683" y1="4.12785" x2="-0.317485" y2="157.128" gradientUnits="userSpaceOnUse">
+                        <stop offset="0.226929" stopColor="#4AB583"/>
+                        <stop offset="1" stopColor="#CEFFDE"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Optimized IT' ? '#FFFFFF' : '#868686' }}>
+                    Optimized IT
+                  </div>
+                </div>
+
+                {/* Structured IT - Middle */}
+                <div style={{ filter: maturityLevel === 'Structured IT' ? 'none' : 'saturate(0.2) brightness(1.3) contrast(0.8)', position: 'relative', marginBottom: '-110px', zIndex: 2 }}>
+                  <svg width="334" height="201" viewBox="0 0 334 201" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="192.376" height="192.376" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0.147461 104.18)" fill="url(#paint0_linear_preview2_wf)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
+                    <rect width="192.376" height="192.376" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 96.1875)" fill="url(#paint1_linear_preview2_wf)" stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
+                    <defs>
+                      <linearGradient id="paint0_linear_preview2_wf" x1="96.188" y1="0" x2="96.188" y2="192.376" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#D8D8D8"/>
+                        <stop offset="0.504808" stopColor="white"/>
+                        <stop offset="1" stopColor="#D8D8D8"/>
+                      </linearGradient>
+                      <linearGradient id="paint1_linear_preview2_wf" x1="187.097" y1="5.05926" x2="-0.389069" y2="192.546" gradientUnits="userSpaceOnUse">
+                        <stop offset="0.226929" stopColor="#9966FF"/>
+                        <stop offset="1" stopColor="#E8DEFF"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Structured IT' ? '#FFFFFF' : '#868686' }}>
+                    Structured IT
+                  </div>
+                </div>
+
+                {/* Reactive IT - Bottom */}
+                <div style={{ filter: maturityLevel === 'Reactive IT' ? 'none' : 'saturate(0.2) brightness(1.3) contrast(0.8)', position: 'relative', zIndex: 1 }}>
+                  <svg width="395" height="237" viewBox="0 0 395 237" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="227.811" height="227.811" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0.147461 122.18)" fill="url(#paint0_linear_preview3_wf)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
+                    <rect width="227.811" height="227.811" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 113.906)" fill="url(#paint1_linear_preview3_wf)" stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
+                    <defs>
+                      <linearGradient id="paint0_linear_preview3_wf" x1="113.906" y1="0" x2="113.906" y2="227.811" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#D8D8D8"/>
+                        <stop offset="0.504808" stopColor="white"/>
+                        <stop offset="1" stopColor="#D8D8D8"/>
+                      </linearGradient>
+                      <linearGradient id="paint1_linear_preview3_wf" x1="221.523" y1="5.9891" x2="-0.460638" y2="227.973" gradientUnits="userSpaceOnUse">
+                        <stop offset="0.226929" stopColor="#9966FF"/>
+                        <stop offset="1" stopColor="#E8DEFF"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Reactive IT' ? '#FFFFFF' : '#868686' }}>
+                    Reactive IT
+                  </div>
+                </div>
+              </div>
+            </div>
         </div>
 
         {/* Email form overlay */}
@@ -364,6 +520,7 @@ function ITMaturityQuiz() {
                   padding: '16px 20px',
                   borderRadius: '8px',
                   border: '1px solid #D9D9D9',
+                  backgroundColor: '#FFFFFF',
                   fontFamily: 'Inter',
                   fontSize: '16px',
                   color: '#201515',
@@ -1009,12 +1166,10 @@ function ITMaturityQuiz() {
           border: '1px solid rgba(0, 0, 0, 0.12)',
           borderRadius: '16px',
           backgroundColor: '#FFFFFF',
-          padding: '64px',
-          transition: 'opacity 300ms ease-in-out',
-          opacity: isTransitioning ? 0 : 1
+          padding: '64px'
         }}
       >
-        {/* Segmented Progress Bar */}
+        {/* Segmented Progress Bar - always visible */}
         <div style={{ marginBottom: '48px' }}>
           {/* Step count and percentage */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -1058,8 +1213,13 @@ function ITMaturityQuiz() {
           </div>
         </div>
 
-        {/* Question */}
-        <div>
+        {/* Question content - fades during transitions */}
+        <div
+          style={{
+            transition: 'opacity 300ms ease-in-out',
+            opacity: isTransitioning ? 0 : 1
+          }}
+        >
           <h2
             style={{
               fontFamily: 'Inter Display',
