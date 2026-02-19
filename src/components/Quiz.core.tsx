@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import html2canvas from 'html2canvas';
 import { submitToHubSpot, getAnswerText } from '../utils/hubspot';
 import { loadQuizState, saveQuizState, clearQuizState, getExpiryDate } from '../utils/quizStorage';
 import OnboardingScreen from './OnboardingScreen';
@@ -82,6 +83,10 @@ export default function QuizCore({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isReturningUser, setIsReturningUser] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
+
+  // Ref for the results card to capture as screenshot
+  const resultsCardRef = useRef<HTMLDivElement>(null);
 
   // Background style based on prop
   const bgStyle = background === 'gradient'
@@ -278,6 +283,44 @@ export default function QuizCore({
     setShowOnboarding(true);
 
     console.log('Quiz reset - ready for retake');
+  };
+
+  // Download results as image
+  const handleDownloadResult = async () => {
+    if (!resultsCardRef.current || isCapturing) return;
+
+    setIsCapturing(true);
+
+    try {
+      const canvas = await html2canvas(resultsCardRef.current, {
+        backgroundColor: '#FFFFFF',
+        scale: 2, // Higher resolution
+        useCORS: true,
+        logging: false,
+        // Ignore elements with data-html2canvas-ignore attribute
+        ignoreElements: (element) => {
+          return element.hasAttribute('data-html2canvas-ignore');
+        }
+      });
+
+      // Convert to blob and download
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'IT-Maturity-Quiz-Result.png';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }
+      }, 'image/png');
+    } catch (error) {
+      console.error('Error capturing screenshot:', error);
+    } finally {
+      setIsCapturing(false);
+    }
   };
 
   const calculateScore = () => {
@@ -634,6 +677,7 @@ export default function QuizCore({
         }}
       >
         <div
+          ref={resultsCardRef}
           style={{
             maxWidth: '1066px',
             width: '100%',
@@ -641,7 +685,8 @@ export default function QuizCore({
             borderRadius: '16px',
             backgroundColor: '#FFFFFF',
             padding: '48px',
-            textAlign: 'left'
+            textAlign: 'left',
+            position: 'relative'
           }}
         >
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', marginBottom: '48px' }}>
@@ -694,6 +739,7 @@ export default function QuizCore({
               )}
 
               <button
+                data-html2canvas-ignore
                 onClick={() => {
                   window.dispatchEvent(new CustomEvent('showReport', {
                     detail: {
@@ -735,6 +781,7 @@ export default function QuizCore({
 
               {isReturningUser && (
                 <button
+                  data-html2canvas-ignore
                   onClick={handleRetakeQuiz}
                   style={{
                     fontFamily,
@@ -767,7 +814,7 @@ export default function QuizCore({
             {/* SVG Visualization */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0px' }}>
               {/* Optimized IT */}
-              <div style={{ filter: maturityLevel === 'Optimized IT' ? 'none' : 'saturate(0.2) brightness(1.3) contrast(0.8)', transition: 'filter 300ms ease', position: 'relative', marginBottom: '-85px', zIndex: 3 }}>
+              <div style={{ position: 'relative', marginBottom: '-85px', zIndex: 3 }}>
                 <svg width="273" height="165" viewBox="0 0 273 165" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="156.941" height="156.941" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0.309082 86.1445)" fill={`url(#${gradientIds.result1_0})`} stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
                   <rect width="156.941" height="156.941" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 78.4688)" fill={`url(#${gradientIds.result1_1})`} stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
@@ -776,7 +823,7 @@ export default function QuizCore({
                       <stop stopColor="#D8D8D8"/><stop offset="0.504808" stopColor="white"/><stop offset="1" stopColor="#D8D8D8"/>
                     </linearGradient>
                     <linearGradient id={gradientIds.result1_1} x1="152.683" y1="4.12785" x2="-0.317485" y2="157.128" gradientUnits="userSpaceOnUse">
-                      <stop offset="0.226929" stopColor="#4AB583"/><stop offset="1" stopColor="#CEFFDE"/>
+                      <stop offset="0.226929" stopColor={maturityLevel === 'Optimized IT' ? '#4AB583' : '#B8B8B8'}/><stop offset="1" stopColor={maturityLevel === 'Optimized IT' ? '#CEFFDE' : '#E8E8E8'}/>
                     </linearGradient>
                   </defs>
                 </svg>
@@ -786,34 +833,16 @@ export default function QuizCore({
               </div>
 
               {/* Structured IT */}
-              <div style={{ filter: maturityLevel === 'Structured IT' ? 'none' : 'saturate(0.2) brightness(1.3) contrast(0.8)', transition: 'filter 300ms ease', position: 'relative', marginBottom: '-110px', zIndex: 2 }}>
+              <div style={{ position: 'relative', marginBottom: '-110px', zIndex: 2 }}>
                 <svg width="334" height="201" viewBox="0 0 334 201" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="192.376" height="192.376" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0.147461 104.18)" fill={`url(#${gradientIds.result2_0})`} stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
-                  <g filter={`url(#${gradientIds.result2_filter})`}>
-                    <rect width="192.376" height="192.376" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 96.1875)" fill={`url(#${gradientIds.result2_1})`}/>
-                    <rect width="192.376" height="192.376" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 96.1875)" stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
-                  </g>
+                  <rect width="192.376" height="192.376" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 96.1875)" fill={`url(#${gradientIds.result2_1})`} stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
                   <defs>
-                    <filter id={gradientIds.result2_filter} x="7.54248" y="4.35547" width="318.12" height="183.664" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                      <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-                      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-                      <feTurbulence type="fractalNoise" baseFrequency="2 2" stitchTiles="stitch" numOctaves="3" result="noise" seed="936" />
-                      <feColorMatrix in="noise" type="luminanceToAlpha" result="alphaNoise" />
-                      <feComponentTransfer in="alphaNoise" result="coloredNoise1">
-                        <feFuncA type="discrete" tableValues="1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
-                      </feComponentTransfer>
-                      <feComposite operator="in" in2="shape" in="coloredNoise1" result="noise1Clipped" />
-                      <feFlood floodColor="rgba(50, 11, 117, 0.15)" result="color1Flood" />
-                      <feComposite operator="in" in2="noise1Clipped" in="color1Flood" result="color1" />
-                      <feMerge result={gradientIds.result2_noise}>
-                        <feMergeNode in="shape" /><feMergeNode in="color1" />
-                      </feMerge>
-                    </filter>
                     <linearGradient id={gradientIds.result2_0} x1="96.188" y1="0" x2="96.188" y2="192.376" gradientUnits="userSpaceOnUse">
                       <stop stopColor="#D8D8D8"/><stop offset="0.504808" stopColor="white"/><stop offset="1" stopColor="#D8D8D8"/>
                     </linearGradient>
                     <linearGradient id={gradientIds.result2_1} x1="187.157" y1="5.05987" x2="-0.38917" y2="192.606" gradientUnits="userSpaceOnUse">
-                      <stop offset="0.226929" stopColor="#392064"/><stop offset="1" stopColor="#8E7BFF"/>
+                      <stop offset="0.226929" stopColor={maturityLevel === 'Structured IT' ? '#392064' : '#808080'}/><stop offset="1" stopColor={maturityLevel === 'Structured IT' ? '#8E7BFF' : '#C8C8C8'}/>
                     </linearGradient>
                   </defs>
                 </svg>
@@ -823,34 +852,16 @@ export default function QuizCore({
               </div>
 
               {/* Reactive IT */}
-              <div style={{ filter: maturityLevel === 'Reactive IT' ? 'none' : 'saturate(0.2) brightness(1.3) contrast(0.8)', transition: 'filter 300ms ease', position: 'relative', zIndex: 1 }}>
+              <div style={{ position: 'relative', zIndex: 1 }}>
                 <svg width="418" height="253" viewBox="0 0 418 253" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="241.044" height="241.044" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 131.535)" fill={`url(#${gradientIds.result3_0})`} stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
-                  <g filter={`url(#${gradientIds.result3_filter})`}>
-                    <path d="M13.2761 128.184C5.94391 123.951 5.94391 117.088 13.2761 112.855L195.475 7.66227C202.807 3.42903 214.695 3.42903 222.027 7.66227L404.225 112.855C411.557 117.088 411.557 123.951 404.225 128.184L222.027 233.377C214.695 237.61 202.807 237.61 195.475 233.377L13.2761 128.184Z" fill={`url(#${gradientIds.result3_1})`}/>
-                    <path d="M13.2761 128.184C5.94391 123.951 5.94391 117.088 13.2761 112.855L195.475 7.66227C202.807 3.42903 214.695 3.42903 222.027 7.66227L404.225 112.855C411.557 117.088 411.557 123.951 404.225 128.184L222.027 233.377C214.695 237.61 202.807 237.61 195.475 233.377L13.2761 128.184Z" stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
-                  </g>
+                  <path d="M13.2761 128.184C5.94391 123.951 5.94391 117.088 13.2761 112.855L195.475 7.66227C202.807 3.42903 214.695 3.42903 222.027 7.66227L404.225 112.855C411.557 117.088 411.557 123.951 404.225 128.184L222.027 233.377C214.695 237.61 202.807 237.61 195.475 233.377L13.2761 128.184Z" fill={`url(#${gradientIds.result3_1})`} stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
                   <defs>
-                    <filter id={gradientIds.result3_filter} x="7.54248" y="4.35156" width="402.417" height="232.336" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                      <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-                      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-                      <feTurbulence type="fractalNoise" baseFrequency="2 2" stitchTiles="stitch" numOctaves="3" result="noise" seed="936" />
-                      <feColorMatrix in="noise" type="luminanceToAlpha" result="alphaNoise" />
-                      <feComponentTransfer in="alphaNoise" result="coloredNoise1">
-                        <feFuncA type="discrete" tableValues="1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
-                      </feComponentTransfer>
-                      <feComposite operator="in" in2="shape" in="coloredNoise1" result="noise1Clipped" />
-                      <feFlood floodColor="rgba(50, 11, 117, 0.15)" result="color1Flood" />
-                      <feComposite operator="in" in2="noise1Clipped" in="color1Flood" result="color1" />
-                      <feMerge result={gradientIds.result3_noise}>
-                        <feMergeNode in="shape" /><feMergeNode in="color1" />
-                      </feMerge>
-                    </filter>
                     <linearGradient id={gradientIds.result3_0} x1="120.522" y1="0" x2="120.522" y2="241.044" gradientUnits="userSpaceOnUse">
                       <stop stopColor="#D8D8D8"/><stop offset="0.504808" stopColor="white"/><stop offset="1" stopColor="#D8D8D8"/>
                     </linearGradient>
                     <linearGradient id={gradientIds.result3_1} x1="208.577" y1="6.43726" x2="208.577" y2="241.429" gradientUnits="userSpaceOnUse">
-                      <stop offset="0.226929" stopColor="#392064"/><stop offset="1" stopColor="#8E7BFF"/>
+                      <stop offset="0.226929" stopColor={maturityLevel === 'Reactive IT' ? '#392064' : '#808080'}/><stop offset="1" stopColor={maturityLevel === 'Reactive IT' ? '#8E7BFF' : '#C8C8C8'}/>
                     </linearGradient>
                   </defs>
                 </svg>
@@ -884,6 +895,52 @@ export default function QuizCore({
 
           {/* Recommendations based on maturity level and goal */}
           {renderRecommendations(maturityLevel, answers[3], fontFamily)}
+
+          {/* Download Button - Bottom Right */}
+          <button
+            data-html2canvas-ignore
+            onClick={handleDownloadResult}
+            disabled={isCapturing}
+            title="Download result as image"
+            style={{
+              position: 'absolute',
+              bottom: '16px',
+              right: '16px',
+              width: '44px',
+              height: '44px',
+              borderRadius: '8px',
+              border: '1px solid #D9D9D9',
+              backgroundColor: '#FFFFFF',
+              cursor: isCapturing ? 'wait' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 200ms ease',
+              opacity: isCapturing ? 0.6 : 1
+            }}
+            onMouseEnter={(e) => {
+              if (!isCapturing) {
+                e.currentTarget.style.borderColor = '#9966FF';
+                e.currentTarget.style.backgroundColor = '#F9F5FF';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#D9D9D9';
+              e.currentTarget.style.backgroundColor = '#FFFFFF';
+            }}
+          >
+            {isCapturing ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ animation: 'spin 1s linear infinite' }}>
+                <circle cx="12" cy="12" r="10" stroke="#9966FF" strokeWidth="2" strokeDasharray="31.4 31.4" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="#4A5565" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7 10L12 15L17 10" stroke="#4A5565" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 15V3" stroke="#4A5565" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </button>
         </div>
       </div>
     );
