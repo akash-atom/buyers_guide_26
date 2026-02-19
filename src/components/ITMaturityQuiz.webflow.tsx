@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { declareComponent } from '@webflow/react';
+import { props } from '@webflow/data-types';
 import { submitToHubSpot, getAnswerText } from '../utils/hubspot';
+import { loadQuizState, saveQuizState, clearQuizState, getExpiryDate } from '../utils/quizStorage';
 import OnboardingScreen from './OnboardingScreen';
 
 interface QuizOption {
@@ -14,6 +16,13 @@ interface QuizQuestion {
   id: number;
   question: string;
   options: QuizOption[];
+}
+
+interface ITMaturityQuizProps {
+  coverImage?: {
+    src: string;
+    alt?: string;
+  };
 }
 
 const quizData: QuizQuestion[] = [
@@ -58,7 +67,7 @@ const quizData: QuizQuestion[] = [
   },
 ];
 
-function ITMaturityQuiz() {
+function ITMaturityQuiz({ coverImage }: ITMaturityQuizProps) {
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -70,6 +79,36 @@ function ITMaturityQuiz() {
   const [emailError, setEmailError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isReturningUser, setIsReturningUser] = useState(false);
+
+  // Restore state from localStorage on mount
+  useEffect(() => {
+    const savedState = loadQuizState();
+
+    if (savedState) {
+      // Restore all state from localStorage
+      setAnswers(savedState.answers);
+      setEmail(savedState.email);
+      setIsComplete(true);
+      setEmailSubmitted(true);
+      setShowOnboarding(false);
+      setIsReturningUser(true);
+
+      // Dispatch unlockTOC event for Webflow integration
+      window.dispatchEvent(new CustomEvent('unlockTOC', {
+        detail: {
+          email: savedState.email,
+          maturityLevel: savedState.maturityLevel,
+          score: savedState.score,
+          timestamp: savedState.completedAt,
+          quizCompleted: true,
+          isReturningUser: true
+        }
+      }));
+
+      console.log('Returning user - quiz state restored');
+    }
+  }, []);
 
   // HubSpot configuration - REPLACE WITH YOUR VALUES
   const HUBSPOT_CONFIG = {
@@ -206,16 +245,56 @@ function ITMaturityQuiz() {
 
     setEmailSubmitted(true);
 
+    // Save quiz state to localStorage for returning visitors
+    const score = calculateScore();
+    const maturityLevel = getResultMessage(score);
+    const completedAt = new Date().toISOString();
+
+    const quizState = {
+      version: 1,
+      email: email,
+      answers: answers,
+      score: score,
+      maturityLevel: maturityLevel,
+      completedAt: completedAt,
+      expiresAt: getExpiryDate()
+    };
+
+    const saved = saveQuizState(quizState);
+    if (saved) {
+      console.log('Quiz state saved for future visits');
+    } else {
+      console.warn('Could not save quiz state - localStorage may be disabled');
+    }
+
     // Dispatch custom event to unlock TOC in Webflow
     window.dispatchEvent(new CustomEvent('unlockTOC', {
       detail: {
         email: email,
-        maturityLevel: getResultMessage(calculateScore()),
-        score: calculateScore(),
-        timestamp: new Date().toISOString(),
+        maturityLevel: maturityLevel,
+        score: score,
+        timestamp: completedAt,
         quizCompleted: true
       }
     }));
+  };
+
+  // Handle quiz retake - clears saved state and resets quiz
+  const handleRetakeQuiz = () => {
+    clearQuizState();
+
+    setCurrentQuestion(0);
+    setAnswers({});
+    setSelectedOption('');
+    setIsComplete(false);
+    setEmail('');
+    setName('');
+    setEmailSubmitted(false);
+    setEmailError('');
+    setIsReturningUser(false);
+    setShowOnboarding(true);
+
+    console.log('Quiz reset - ready for retake');
   };
 
   // Calculate total score from questions 1-3
@@ -254,7 +333,7 @@ function ITMaturityQuiz() {
         className="flex items-center justify-center p-4"
         style={{
           minHeight: '100vh',
-          background: 'linear-gradient(180deg, #F9F5FF 0%, #FFFFFF 100%)'
+          background: 'transparent'
         }}
       >
         <div
@@ -268,7 +347,7 @@ function ITMaturityQuiz() {
             overflow: 'hidden'
           }}
         >
-          <OnboardingScreen onStart={handleStartQuiz} />
+          <OnboardingScreen onStart={handleStartQuiz} coverImageUrl={coverImage?.src} />
         </div>
       </div>
     );
@@ -284,7 +363,7 @@ function ITMaturityQuiz() {
         style={{
           position: 'relative',
           minHeight: '100vh',
-          background: 'linear-gradient(180deg, #F9F5FF 0%, #FFFFFF 100%)',
+          background: 'transparent',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -313,7 +392,7 @@ function ITMaturityQuiz() {
                 <h3
                   style={{
                     textTransform: 'uppercase',
-                    fontFamily: 'Inter',
+                    fontFamily: 'Intervariable',
                     fontWeight: 500,
                     fontSize: '11px',
                     letterSpacing: '11px',
@@ -329,7 +408,7 @@ function ITMaturityQuiz() {
                 {/* Maturity Level */}
                 <h2
                   style={{
-                    fontFamily: 'Inter Display',
+                    fontFamily: 'Intervariable',
                     fontWeight: 500,
                     fontSize: '48px',
                     letterSpacing: '-0.02em',
@@ -344,7 +423,7 @@ function ITMaturityQuiz() {
                 {maturityLevel === 'Reactive IT' && (
                   <p
                     style={{
-                      fontFamily: 'Inter Display',
+                      fontFamily: 'Intervariable',
                       fontWeight: 400,
                       fontSize: '18px',
                       letterSpacing: '-0.004em',
@@ -360,7 +439,7 @@ function ITMaturityQuiz() {
                 {maturityLevel === 'Structured IT' && (
                   <p
                     style={{
-                      fontFamily: 'Inter Display',
+                      fontFamily: 'Intervariable',
                       fontWeight: 400,
                       fontSize: '18px',
                       letterSpacing: '-0.004em',
@@ -376,7 +455,7 @@ function ITMaturityQuiz() {
                 {maturityLevel === 'Optimized IT' && (
                   <p
                     style={{
-                      fontFamily: 'Inter Display',
+                      fontFamily: 'Intervariable',
                       fontWeight: 400,
                       fontSize: '18px',
                       letterSpacing: '-0.004em',
@@ -392,7 +471,7 @@ function ITMaturityQuiz() {
                 {/* CTA Button placeholder */}
                 <div
                   style={{
-                    fontFamily: 'Inter',
+                    fontFamily: 'Intervariable',
                     fontSize: '20px',
                     fontWeight: 600,
                     color: '#FFFFFF',
@@ -425,7 +504,7 @@ function ITMaturityQuiz() {
                       </linearGradient>
                     </defs>
                   </svg>
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Optimized IT' ? '#FFFFFF' : '#868686' }}>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Intervariable', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Optimized IT' ? '#FFFFFF' : '#868686' }}>
                     Optimized IT
                   </div>
                 </div>
@@ -447,7 +526,7 @@ function ITMaturityQuiz() {
                       </linearGradient>
                     </defs>
                   </svg>
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Structured IT' ? '#FFFFFF' : '#868686' }}>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Intervariable', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Structured IT' ? '#FFFFFF' : '#868686' }}>
                     Structured IT
                   </div>
                 </div>
@@ -469,7 +548,7 @@ function ITMaturityQuiz() {
                       </linearGradient>
                     </defs>
                   </svg>
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Reactive IT' ? '#FFFFFF' : '#868686' }}>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Intervariable', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Reactive IT' ? '#FFFFFF' : '#868686' }}>
                     Reactive IT
                   </div>
                 </div>
@@ -491,7 +570,7 @@ function ITMaturityQuiz() {
         >
           <h2
             style={{
-              fontFamily: 'Inter Display',
+              fontFamily: 'Intervariable',
               fontSize: '56px',
               fontWeight: 400,
               color: '#000000',
@@ -521,7 +600,7 @@ function ITMaturityQuiz() {
                   borderRadius: '8px',
                   border: '1px solid #D9D9D9',
                   backgroundColor: '#FFFFFF',
-                  fontFamily: 'Inter',
+                  fontFamily: 'Intervariable',
                   fontSize: '16px',
                   color: '#201515',
                   outline: 'none',
@@ -547,7 +626,7 @@ function ITMaturityQuiz() {
                   padding: '16px 20px',
                   borderRadius: '8px',
                   border: emailError ? '1px solid #FF0000' : '1px solid #D9D9D9',
-                  fontFamily: 'Inter',
+                  fontFamily: 'Intervariable',
                   fontSize: '16px',
                   color: '#201515',
                   outline: 'none',
@@ -558,7 +637,7 @@ function ITMaturityQuiz() {
                 onBlur={(e) => !emailError && (e.target.style.border = '1px solid #D9D9D9')}
               />
               {emailError && (
-                <p style={{ color: '#FF0000', fontSize: '14px', marginTop: '8px', fontFamily: 'Inter' }}>
+                <p style={{ color: '#FF0000', fontSize: '14px', marginTop: '8px', fontFamily: 'Intervariable' }}>
                   {emailError}
                 </p>
               )}
@@ -575,7 +654,7 @@ function ITMaturityQuiz() {
                 border: 'none',
                 backgroundColor: '#8040F0',
                 color: '#FFFFFF',
-                fontFamily: 'Inter',
+                fontFamily: 'Intervariable',
                 fontSize: '18px',
                 fontWeight: 600,
                 cursor: isSubmitting ? 'not-allowed' : 'pointer',
@@ -600,7 +679,7 @@ function ITMaturityQuiz() {
       <div
         style={{
           minHeight: '100vh',
-          background: 'linear-gradient(180deg, #F9F5FF 0%, #FFFFFF 100%)',
+          background: 'transparent',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -626,7 +705,7 @@ function ITMaturityQuiz() {
                 <h3
                   style={{
                     textTransform: 'uppercase',
-                    fontFamily: 'Inter',
+                    fontFamily: 'Intervariable',
                     fontWeight: 500,
                     fontSize: '11px',
                     letterSpacing: '11px',
@@ -642,7 +721,7 @@ function ITMaturityQuiz() {
                 {/* Maturity Level */}
                 <h2
                   style={{
-                    fontFamily: 'Inter Display',
+                    fontFamily: 'Intervariable',
                     fontWeight: 500,
                     fontSize: '48px',
                     letterSpacing: '-0.02em',
@@ -657,7 +736,7 @@ function ITMaturityQuiz() {
                 {maturityLevel === 'Reactive IT' && (
                   <p
                     style={{
-                      fontFamily: 'Inter Display',
+                      fontFamily: 'Intervariable',
                       fontWeight: 400,
                       fontSize: '18px',
                       letterSpacing: '-0.004em',
@@ -673,7 +752,7 @@ function ITMaturityQuiz() {
                 {maturityLevel === 'Structured IT' && (
                   <p
                     style={{
-                      fontFamily: 'Inter Display',
+                      fontFamily: 'Intervariable',
                       fontWeight: 400,
                       fontSize: '18px',
                       letterSpacing: '-0.004em',
@@ -689,7 +768,7 @@ function ITMaturityQuiz() {
                 {maturityLevel === 'Optimized IT' && (
                   <p
                     style={{
-                      fontFamily: 'Inter Display',
+                      fontFamily: 'Intervariable',
                       fontWeight: 400,
                       fontSize: '18px',
                       letterSpacing: '-0.004em',
@@ -734,7 +813,7 @@ function ITMaturityQuiz() {
                     }, 150);
                   }}
                   style={{
-                    fontFamily: 'Inter',
+                    fontFamily: 'Intervariable',
                     fontSize: '20px',
                     fontWeight: 600,
                     color: '#FFFFFF',
@@ -743,46 +822,82 @@ function ITMaturityQuiz() {
                     borderRadius: '8px',
                     padding: '18px 28px',
                     cursor: 'pointer',
-                    transition: 'background-color 200ms ease'
+                    transition: 'background-color 200ms ease',
+                    minWidth: '320px'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6F35D1'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#8040F0'}
                 >
                   Read the complete guide {'->'}
                 </button>
+
+                {/* Retake Quiz button for returning users */}
+                {isReturningUser && (
+                  <button
+                    onClick={handleRetakeQuiz}
+                    style={{
+                      fontFamily: 'Intervariable',
+                      fontSize: '20px',
+                      fontWeight: 600,
+                      color: '#4A5565',
+                      backgroundColor: 'transparent',
+                      border: '1px solid #D9D9D9',
+                      borderRadius: '8px',
+                      padding: '18px 28px',
+                      cursor: 'pointer',
+                      transition: 'all 200ms ease',
+                      marginTop: '12px',
+                      minWidth: '320px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#9966FF';
+                      e.currentTarget.style.color = '#9966FF';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#D9D9D9';
+                      e.currentTarget.style.color = '#4A5565';
+                    }}
+                  >
+                    Retake Quiz
+                  </button>
+                )}
               </div>
 
               {/* Right Column - SVG Visualization - All 3 stacked */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0px' }}>
                 {/* Optimized IT - Top */}
-                <div style={{ opacity: maturityLevel === 'Optimized IT' ? 1 : 0.3, transition: 'opacity 300ms ease', position: 'relative', marginBottom: '-40px', zIndex: 3 }}>
+                <div style={{ filter: maturityLevel === 'Optimized IT' ? 'none' : 'saturate(0.2) brightness(1.3) contrast(0.8)', transition: 'filter 300ms ease', position: 'relative', marginBottom: '-85px', zIndex: 3 }}>
                   <svg width="273" height="165" viewBox="0 0 273 165" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="156.941" height="156.941" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0.309082 86.1445)" fill="url(#paint0_linear_796_3068_webflow)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
-                    <rect width="156.941" height="156.941" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 78.4688)" fill="url(#paint1_linear_796_3068_webflow)" stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
+                    <rect width="156.941" height="156.941" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0.309082 86.1445)" fill="url(#paint0_linear_796_3068_wf)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
+                    <rect width="156.941" height="156.941" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 78.4688)" fill="url(#paint1_linear_796_3068_wf)" stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
                     <defs>
-                      <linearGradient id="paint0_linear_796_3068_webflow" x1="78.4703" y1="0" x2="78.4703" y2="156.941" gradientUnits="userSpaceOnUse">
+                      <linearGradient id="paint0_linear_796_3068_wf" x1="78.4703" y1="0" x2="78.4703" y2="156.941" gradientUnits="userSpaceOnUse">
                         <stop stopColor="#D8D8D8"/>
                         <stop offset="0.504808" stopColor="white"/>
                         <stop offset="1" stopColor="#D8D8D8"/>
                       </linearGradient>
-                      <linearGradient id="paint1_linear_796_3068_webflow" x1="152.683" y1="4.12785" x2="-0.317485" y2="157.128" gradientUnits="userSpaceOnUse">
+                      <linearGradient id="paint1_linear_796_3068_wf" x1="152.683" y1="4.12785" x2="-0.317485" y2="157.128" gradientUnits="userSpaceOnUse">
                         <stop offset="0.226929" stopColor="#4AB583"/>
                         <stop offset="1" stopColor="#CEFFDE"/>
                       </linearGradient>
                     </defs>
                   </svg>
+                  {/* Text overlay */}
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Intervariable', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Optimized IT' ? '#FFFFFF' : '#868686', transition: 'color 300ms ease' }}>
+                    Optimized IT
+                  </div>
                 </div>
 
                 {/* Structured IT - Middle */}
-                <div style={{ opacity: maturityLevel === 'Structured IT' ? 1 : 0.3, transition: 'opacity 300ms ease', position: 'relative', marginBottom: '-50px', zIndex: 2 }}>
+                <div style={{ filter: maturityLevel === 'Structured IT' ? 'none' : 'saturate(0.2) brightness(1.3) contrast(0.8)', transition: 'filter 300ms ease', position: 'relative', marginBottom: '-110px', zIndex: 2 }}>
                   <svg width="334" height="201" viewBox="0 0 334 201" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="192.376" height="192.376" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0.147461 104.18)" fill="url(#paint0_linear_796_3082_webflow)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
-                    <g filter="url(#filter0_n_796_3082_webflow)">
-                      <rect width="192.376" height="192.376" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 96.1875)" fill="url(#paint1_linear_796_3082_webflow)"/>
+                    <rect width="192.376" height="192.376" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0.147461 104.18)" fill="url(#paint0_linear_796_3082_wf)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
+                    <g filter="url(#filter0_n_796_3082_wf)">
+                      <rect width="192.376" height="192.376" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 96.1875)" fill="url(#paint1_linear_796_3082_wf)"/>
                       <rect width="192.376" height="192.376" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 96.1875)" stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
                     </g>
                     <defs>
-                      <filter id="filter0_n_796_3082_webflow" x="7.54248" y="4.35547" width="318.12" height="183.664" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                      <filter id="filter0_n_796_3082_wf" x="7.54248" y="4.35547" width="318.12" height="183.664" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
                         <feFlood floodOpacity="0" result="BackgroundImageFix"/>
                         <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
                         <feTurbulence type="fractalNoise" baseFrequency="2 2" stitchTiles="stitch" numOctaves="3" result="noise" seed="936" />
@@ -793,34 +908,38 @@ function ITMaturityQuiz() {
                         <feComposite operator="in" in2="shape" in="coloredNoise1" result="noise1Clipped" />
                         <feFlood floodColor="rgba(50, 11, 117, 0.15)" result="color1Flood" />
                         <feComposite operator="in" in2="noise1Clipped" in="color1Flood" result="color1" />
-                        <feMerge result="effect1_noise_796_3082_webflow">
+                        <feMerge result="effect1_noise_796_3082_wf">
                           <feMergeNode in="shape" />
                           <feMergeNode in="color1" />
                         </feMerge>
                       </filter>
-                      <linearGradient id="paint0_linear_796_3082_webflow" x1="96.188" y1="0" x2="96.188" y2="192.376" gradientUnits="userSpaceOnUse">
+                      <linearGradient id="paint0_linear_796_3082_wf" x1="96.188" y1="0" x2="96.188" y2="192.376" gradientUnits="userSpaceOnUse">
                         <stop stopColor="#D8D8D8"/>
                         <stop offset="0.504808" stopColor="white"/>
                         <stop offset="1" stopColor="#D8D8D8"/>
                       </linearGradient>
-                      <linearGradient id="paint1_linear_796_3082_webflow" x1="187.157" y1="5.05987" x2="-0.38917" y2="192.606" gradientUnits="userSpaceOnUse">
+                      <linearGradient id="paint1_linear_796_3082_wf" x1="187.157" y1="5.05987" x2="-0.38917" y2="192.606" gradientUnits="userSpaceOnUse">
                         <stop offset="0.226929" stopColor="#392064"/>
                         <stop offset="1" stopColor="#8E7BFF"/>
                       </linearGradient>
                     </defs>
                   </svg>
+                  {/* Text overlay */}
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Intervariable', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Structured IT' ? '#FFFFFF' : '#868686', transition: 'color 300ms ease' }}>
+                    Structured IT
+                  </div>
                 </div>
 
                 {/* Reactive IT - Bottom */}
-                <div style={{ opacity: maturityLevel === 'Reactive IT' ? 1 : 0.3, transition: 'opacity 300ms ease', position: 'relative', zIndex: 1 }}>
+                <div style={{ filter: maturityLevel === 'Reactive IT' ? 'none' : 'saturate(0.2) brightness(1.3) contrast(0.8)', transition: 'filter 300ms ease', position: 'relative', zIndex: 1 }}>
                   <svg width="418" height="253" viewBox="0 0 418 253" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="241.044" height="241.044" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 131.535)" fill="url(#paint0_linear_796_3086_webflow)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
-                    <g filter="url(#filter0_n_796_3086_webflow)">
-                      <path d="M13.2761 128.184C5.94391 123.951 5.94391 117.088 13.2761 112.855L195.475 7.66227C202.807 3.42903 214.695 3.42903 222.027 7.66227L404.225 112.855C411.557 117.088 411.557 123.951 404.225 128.184L222.027 233.377C214.695 237.61 202.807 237.61 195.475 233.377L13.2761 128.184Z" fill="url(#paint1_linear_796_3086_webflow)"/>
+                    <rect width="241.044" height="241.044" rx="15.3299" transform="matrix(0.866025 -0.5 0.866025 0.5 0 131.535)" fill="url(#paint0_linear_796_3086_wf)" stroke="#272727" strokeWidth="0.306599" strokeLinecap="round" strokeDasharray="3.07 3.07"/>
+                    <g filter="url(#filter0_n_796_3086_wf)">
+                      <path d="M13.2761 128.184C5.94391 123.951 5.94391 117.088 13.2761 112.855L195.475 7.66227C202.807 3.42903 214.695 3.42903 222.027 7.66227L404.225 112.855C411.557 117.088 411.557 123.951 404.225 128.184L222.027 233.377C214.695 237.61 202.807 237.61 195.475 233.377L13.2761 128.184Z" fill="url(#paint1_linear_796_3086_wf)"/>
                       <path d="M13.2761 128.184C5.94391 123.951 5.94391 117.088 13.2761 112.855L195.475 7.66227C202.807 3.42903 214.695 3.42903 222.027 7.66227L404.225 112.855C411.557 117.088 411.557 123.951 404.225 128.184L222.027 233.377C214.695 237.61 202.807 237.61 195.475 233.377L13.2761 128.184Z" stroke="#B2B2B2" strokeWidth="0.383248" strokeLinecap="round"/>
                     </g>
                     <defs>
-                      <filter id="filter0_n_796_3086_webflow" x="7.54248" y="4.35156" width="402.417" height="232.336" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                      <filter id="filter0_n_796_3086_wf" x="7.54248" y="4.35156" width="402.417" height="232.336" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
                         <feFlood floodOpacity="0" result="BackgroundImageFix"/>
                         <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
                         <feTurbulence type="fractalNoise" baseFrequency="2 2" stitchTiles="stitch" numOctaves="3" result="noise" seed="936" />
@@ -831,106 +950,102 @@ function ITMaturityQuiz() {
                         <feComposite operator="in" in2="shape" in="coloredNoise1" result="noise1Clipped" />
                         <feFlood floodColor="rgba(50, 11, 117, 0.15)" result="color1Flood" />
                         <feComposite operator="in" in2="noise1Clipped" in="color1Flood" result="color1" />
-                        <feMerge result="effect1_noise_796_3086_webflow">
+                        <feMerge result="effect1_noise_796_3086_wf">
                           <feMergeNode in="shape" />
                           <feMergeNode in="color1" />
                         </feMerge>
                       </filter>
-                      <linearGradient id="paint0_linear_796_3086_webflow" x1="120.522" y1="0" x2="120.522" y2="241.044" gradientUnits="userSpaceOnUse">
+                      <linearGradient id="paint0_linear_796_3086_wf" x1="120.522" y1="0" x2="120.522" y2="241.044" gradientUnits="userSpaceOnUse">
                         <stop stopColor="#D8D8D8"/>
                         <stop offset="0.504808" stopColor="white"/>
                         <stop offset="1" stopColor="#D8D8D8"/>
                       </linearGradient>
-                      <linearGradient id="paint1_linear_796_3086_webflow" x1="208.577" y1="6.43726" x2="208.577" y2="241.429" gradientUnits="userSpaceOnUse">
+                      <linearGradient id="paint1_linear_796_3086_wf" x1="208.577" y1="6.43726" x2="208.577" y2="241.429" gradientUnits="userSpaceOnUse">
                         <stop offset="0.226929" stopColor="#392064"/>
                         <stop offset="1" stopColor="#8E7BFF"/>
                       </linearGradient>
                     </defs>
                   </svg>
+                  {/* Text overlay */}
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Intervariable', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Reactive IT' ? '#FFFFFF' : '#868686', transition: 'color 300ms ease' }}>
+                    Reactive IT
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Ticket Composition Section */}
+            {/* Divider line */}
+            <div style={{ width: '100%', height: '1px', backgroundColor: '#D9D9D9', marginTop: '32px', marginBottom: '32px' }}></div>
+
+            {/* Second Row - Goal-Based Recommendations */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '32px' }}>
+              <h3
+                style={{
+                  textTransform: 'uppercase',
+                  fontFamily: 'Intervariable',
+                  fontWeight: 500,
+                  fontSize: '11px',
+                  letterSpacing: '11px',
+                  color: '#4A5565',
+                  backgroundColor: 'rgba(201, 201, 201, 0.36)',
+                  padding: '2px 10px'
+                }}
+              >
+                Goal-Based Recommendations
+              </h3>
+            </div>
+
+            {/* Priority and Insight based on maturity level and selected goal */}
             {maturityLevel === 'Reactive IT' && (
-              <div className="max-w-xl mx-auto mb-8">
-                <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                  Your agents are handling work that AI and automation could deflect. Every ticket deflected saves 15-30 minutes of agent time.
-                </p>
-
-                <div className="bg-gray-50 rounded-xl p-6 text-left">
-                  <h3 className="font-bold text-gray-900 mb-4">Ticket Composition:</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Deflectable:</span>
-                        <span className="text-gray-600">40-50% of tickets handled manually</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Automatable:</span>
-                        <span className="text-gray-600">20-30% requiring human routing</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Expert:</span>
-                        <span className="text-gray-600">30-40% but agents rarely get to focus here</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Show additional content based on question 4 answer */}
+              <div>
                 {answers[3] === 'option_1' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Simple AI deflection, fast implementation, low admin overhead</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Simple AI deflection, fast implementation, low admin overhead</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">At 1,000 deflectable tickets/month, effective AI can reclaim 250-500 hours of agent time.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>At 1,000 deflectable tickets/month, effective AI can reclaim 250-500 hours of agent time.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_2' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Slack/Teams-native, consumer-simple UX, mobile-first</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Slack/Teams-native, consumer-simple UX, mobile-first</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Employees shouldn't need training to get help. Meet them where they already work.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Employees shouldn't need training to get help. Meet them where they already work.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_3' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Start with deflection before workflow automation</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Start with deflection before workflow automation</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Reduce volume first—then you'll have capacity to build automation.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Reduce volume first—then you'll have capacity to build automation.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_4' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Quick wins with AI deflection to build momentum</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Quick wins with AI deflection to build momentum</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Demonstrate ROI with measurable ticket reduction before larger transformation.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Demonstrate ROI with measurable ticket reduction before larger transformation.</div>
                     </div>
                   </div>
                 )}
@@ -938,84 +1053,55 @@ function ITMaturityQuiz() {
             )}
 
             {maturityLevel === 'Structured IT' && (
-              <div className="max-w-xl mx-auto mb-8">
-                <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                  You've started deflecting easy stuff, but agents still spend significant time on automatable work with manual handoffs between systems.
-                </p>
-
-                <div className="bg-gray-50 rounded-xl p-6 text-left">
-                  <h3 className="font-bold text-gray-900 mb-4">Ticket Composition:</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Deflectable:</span>
-                        <span className="text-gray-600">30-50% now deflected</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Automatable:</span>
-                        <span className="text-gray-600">Still mostly manual execution</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Expert:</span>
-                        <span className="text-gray-600">Agents have more capacity but still interrupted</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Show additional content based on question 4 answer */}
+              <div>
                 {answers[3] === 'option_1' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Production-ready AI with proven deflection rates, workflow automation</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Production-ready AI with proven deflection rates, workflow automation</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Every automated workflow saves 10-20 minutes per execution.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Every automated workflow saves 10-20 minutes per execution.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_2' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Seamless handoffs, proactive notifications, self-service workflows</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Seamless handoffs, proactive notifications, self-service workflows</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Employees feel the friction of manual handoffs. Smooth the edges.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Employees feel the friction of manual handoffs. Smooth the edges.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_3' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">ESM capabilities, low-code workflows, strong integrations</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>ESM capabilities, low-code workflows, strong integrations</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Extend service management beyond IT without proportional headcount.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Extend service management beyond IT without proportional headcount.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_4' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">API-first platforms that integrate with your ecosystem</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>API-first platforms that integrate with your ecosystem</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Avoid rip-and-replace. Composable platforms let you modernize incrementally.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Avoid rip-and-replace. Composable platforms let you modernize incrementally.</div>
                     </div>
                   </div>
                 )}
@@ -1023,127 +1109,60 @@ function ITMaturityQuiz() {
             )}
 
             {maturityLevel === 'Optimized IT' && (
-              <div className="max-w-xl mx-auto mb-8">
-                <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                  You've automated the routine. Agents focus on work that genuinely requires expertise—complex troubleshooting, architecture, strategic initiatives.
-                </p>
-
-                <div className="bg-gray-50 rounded-xl p-6 text-left">
-                  <h3 className="font-bold text-gray-900 mb-4">Ticket Composition:</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Deflectable:</span>
-                        <span className="text-gray-600">80-90% autonomously resolved</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Automatable:</span>
-                        <span className="text-gray-600">60-80% handled by workflows</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-1">
-                        <span className="font-semibold text-gray-700">Expert:</span>
-                        <span className="text-gray-600">Agents spend 70%+ of time here</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Show additional content based on question 4 answer */}
+              <div>
                 {answers[3] === 'option_1' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Advanced AI for edge cases, predictive capabilities</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Advanced AI for edge cases, predictive capabilities</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">You've handled the obvious—now tackle the long tail.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>You've handled the obvious—now tackle the long tail.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_2' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Proactive service, personalization, cross-department consistency</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Proactive service, personalization, cross-department consistency</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Move from reactive to anticipatory service delivery.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Move from reactive to anticipatory service delivery.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_3' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Federated architecture, enterprise-wide ESM</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Federated architecture, enterprise-wide ESM</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Your model works—now extend it systematically across the organization.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Your model works—now extend it systematically across the organization.</div>
                     </div>
                   </div>
                 )}
 
                 {answers[3] === 'option_4' && (
-                  <div className="bg-primary-50 rounded-xl p-6 text-left mt-6 border-2 border-primary-200">
-                    <div className="mb-3">
-                      <span className="font-bold text-gray-900">Priority: </span>
-                      <span className="text-gray-700">Composable architecture, consumption analytics, transparent TCO</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Composable architecture, consumption analytics, transparent TCO</div>
                     </div>
-                    <div>
-                      <span className="font-bold text-gray-900">Insight: </span>
-                      <span className="text-gray-700">Value shifts from cost reduction to capacity creation for strategic work.</span>
+                    <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Intervariable', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Value shifts from cost reduction to capacity creation for strategic work.</div>
                     </div>
                   </div>
                 )}
               </div>
             )}
-
-            {/* Action Button */}
-            <div className="mt-8">
-              <button
-                onClick={() => {
-                  // Dispatch custom event to communicate with Webflow
-                  window.dispatchEvent(new CustomEvent('showReport', {
-                    detail: {
-                      maturityLevel: maturityLevel,
-                      score: totalScore,
-                      email: email,
-                      answers: answers,
-                      selectedGoal: answers[3], // Question 4 answer
-                      timestamp: new Date().toISOString()
-                    }
-                  }));
-                  console.log('Report event dispatched:', {
-                    maturityLevel,
-                    score: totalScore,
-                    selectedGoal: answers[3]
-                  });
-
-                  // Auto-scroll to first section of report
-                  setTimeout(() => {
-                    const firstSection = document.querySelector('#section-intro');
-                    if (firstSection) {
-                      firstSection.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                      });
-                    }
-                  }, 150);
-                }}
-                className="bg-primary-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-primary-700 transition-colors"
-              >
-                Read the report
-              </button>
-            </div>
           </div>
       </div>
     );
@@ -1156,7 +1175,7 @@ function ITMaturityQuiz() {
       className="flex items-center justify-center p-4"
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(180deg, #F9F5FF 0%, #FFFFFF 100%)'
+        background: 'transparent'
       }}
     >
       <div
@@ -1175,7 +1194,7 @@ function ITMaturityQuiz() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <span
               style={{
-                fontFamily: 'Inter',
+                fontFamily: 'Intervariable',
                 fontWeight: 500,
                 fontSize: '14px',
                 color: '#201515',
@@ -1186,7 +1205,7 @@ function ITMaturityQuiz() {
             </span>
             <span
               style={{
-                fontFamily: 'Inter',
+                fontFamily: 'Intervariable',
                 fontWeight: 500,
                 fontSize: '14px',
                 color: '#201515',
@@ -1222,7 +1241,7 @@ function ITMaturityQuiz() {
         >
           <h2
             style={{
-              fontFamily: 'Inter Display',
+              fontFamily: 'Intervariable',
               fontSize: '48px',
               fontWeight: 400,
               letterSpacing: '-0.96px',
@@ -1250,7 +1269,7 @@ function ITMaturityQuiz() {
                     ? 'linear-gradient(to right, #9966FF, #FF8FA3)'
                     : '#FFFFFF',
                   color: selectedOption === option.value ? '#FFFFFF' : '#201515',
-                  fontFamily: 'Inter',
+                  fontFamily: 'Intervariable',
                   fontSize: '18px',
                   fontWeight: 400,
                   letterSpacing: '-0.072px',
@@ -1302,7 +1321,7 @@ function ITMaturityQuiz() {
                 border: '1px solid #C1C1C1',
                 backgroundColor: '#FFFFFF',
                 color: '#201515',
-                fontFamily: 'Inter',
+                fontFamily: 'Intervariable',
                 fontSize: '16px',
                 fontWeight: 500,
                 cursor: 'pointer',
@@ -1322,5 +1341,11 @@ function ITMaturityQuiz() {
 export default declareComponent(ITMaturityQuiz, {
   name: 'ITMaturityQuiz',
   description: 'Interactive questionnaire to assess IT maturity level with scoring and personalized recommendations',
-  group: 'Interactive'
+  group: 'Interactive',
+  props: {
+    coverImage: props.Image({
+      name: 'Cover Image',
+      tooltip: 'Select a cover image from the asset library'
+    })
+  }
 });

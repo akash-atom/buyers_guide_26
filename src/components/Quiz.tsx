@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { submitToHubSpot, getAnswerText } from '../utils/hubspot';
+import { loadQuizState, saveQuizState, clearQuizState, getExpiryDate } from '../utils/quizStorage';
 import OnboardingScreen from './OnboardingScreen';
 
 interface QuizOption {
@@ -69,6 +70,36 @@ export default function Quiz() {
   const [emailError, setEmailError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isReturningUser, setIsReturningUser] = useState(false);
+
+  // Restore state from localStorage on mount
+  useEffect(() => {
+    const savedState = loadQuizState();
+
+    if (savedState) {
+      // Restore all state from localStorage
+      setAnswers(savedState.answers);
+      setEmail(savedState.email);
+      setIsComplete(true);
+      setEmailSubmitted(true);
+      setShowOnboarding(false);
+      setIsReturningUser(true);
+
+      // Dispatch unlockTOC event for Webflow integration
+      window.dispatchEvent(new CustomEvent('unlockTOC', {
+        detail: {
+          email: savedState.email,
+          maturityLevel: savedState.maturityLevel,
+          score: savedState.score,
+          timestamp: savedState.completedAt,
+          quizCompleted: true,
+          isReturningUser: true
+        }
+      }));
+
+      console.log('Returning user - quiz state restored');
+    }
+  }, []);
 
   // HubSpot configuration - REPLACE WITH YOUR VALUES
   const HUBSPOT_CONFIG = {
@@ -205,16 +236,56 @@ export default function Quiz() {
 
     setEmailSubmitted(true);
 
+    // Save quiz state to localStorage for returning visitors
+    const score = calculateScore();
+    const maturityLevel = getResultMessage(score);
+    const completedAt = new Date().toISOString();
+
+    const quizState = {
+      version: 1,
+      email: email,
+      answers: answers,
+      score: score,
+      maturityLevel: maturityLevel,
+      completedAt: completedAt,
+      expiresAt: getExpiryDate()
+    };
+
+    const saved = saveQuizState(quizState);
+    if (saved) {
+      console.log('Quiz state saved for future visits');
+    } else {
+      console.warn('Could not save quiz state - localStorage may be disabled');
+    }
+
     // Dispatch custom event to unlock TOC in Webflow
     window.dispatchEvent(new CustomEvent('unlockTOC', {
       detail: {
         email: email,
-        maturityLevel: getResultMessage(calculateScore()),
-        score: calculateScore(),
-        timestamp: new Date().toISOString(),
+        maturityLevel: maturityLevel,
+        score: score,
+        timestamp: completedAt,
         quizCompleted: true
       }
     }));
+  };
+
+  // Handle quiz retake - clears saved state and resets quiz
+  const handleRetakeQuiz = () => {
+    clearQuizState();
+
+    setCurrentQuestion(0);
+    setAnswers({});
+    setSelectedOption('');
+    setIsComplete(false);
+    setEmail('');
+    setName('');
+    setEmailSubmitted(false);
+    setEmailError('');
+    setIsReturningUser(false);
+    setShowOnboarding(true);
+
+    console.log('Quiz reset - ready for retake');
   };
 
   // Calculate total score from questions 1-3
@@ -312,7 +383,7 @@ export default function Quiz() {
                 <h3
                   style={{
                     textTransform: 'uppercase',
-                    fontFamily: 'Inter',
+                    fontFamily: 'Inter, sans-serif',
                     fontWeight: 500,
                     fontSize: '11px',
                     letterSpacing: '11px',
@@ -328,7 +399,7 @@ export default function Quiz() {
                 {/* Maturity Level */}
                 <h2
                   style={{
-                    fontFamily: 'Inter Display',
+                    fontFamily: 'Inter, sans-serif',
                     fontWeight: 500,
                     fontSize: '48px',
                     letterSpacing: '-0.02em',
@@ -343,7 +414,7 @@ export default function Quiz() {
                 {maturityLevel === 'Reactive IT' && (
                   <p
                     style={{
-                      fontFamily: 'Inter Display',
+                      fontFamily: 'Inter, sans-serif',
                       fontWeight: 400,
                       fontSize: '18px',
                       letterSpacing: '-0.004em',
@@ -359,7 +430,7 @@ export default function Quiz() {
                 {maturityLevel === 'Structured IT' && (
                   <p
                     style={{
-                      fontFamily: 'Inter Display',
+                      fontFamily: 'Inter, sans-serif',
                       fontWeight: 400,
                       fontSize: '18px',
                       letterSpacing: '-0.004em',
@@ -375,7 +446,7 @@ export default function Quiz() {
                 {maturityLevel === 'Optimized IT' && (
                   <p
                     style={{
-                      fontFamily: 'Inter Display',
+                      fontFamily: 'Inter, sans-serif',
                       fontWeight: 400,
                       fontSize: '18px',
                       letterSpacing: '-0.004em',
@@ -391,7 +462,7 @@ export default function Quiz() {
                 {/* CTA Button placeholder */}
                 <div
                   style={{
-                    fontFamily: 'Inter',
+                    fontFamily: 'Inter, sans-serif',
                     fontSize: '20px',
                     fontWeight: 600,
                     color: '#FFFFFF',
@@ -424,7 +495,7 @@ export default function Quiz() {
                       </linearGradient>
                     </defs>
                   </svg>
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Optimized IT' ? '#FFFFFF' : '#868686' }}>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Optimized IT' ? '#FFFFFF' : '#868686' }}>
                     Optimized IT
                   </div>
                 </div>
@@ -446,7 +517,7 @@ export default function Quiz() {
                       </linearGradient>
                     </defs>
                   </svg>
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Structured IT' ? '#FFFFFF' : '#868686' }}>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Structured IT' ? '#FFFFFF' : '#868686' }}>
                     Structured IT
                   </div>
                 </div>
@@ -468,7 +539,7 @@ export default function Quiz() {
                       </linearGradient>
                     </defs>
                   </svg>
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Reactive IT' ? '#FFFFFF' : '#868686' }}>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Reactive IT' ? '#FFFFFF' : '#868686' }}>
                     Reactive IT
                   </div>
                 </div>
@@ -490,7 +561,7 @@ export default function Quiz() {
         >
           <h2
             style={{
-              fontFamily: 'Inter Display',
+              fontFamily: 'Inter, sans-serif',
               fontSize: '56px',
               fontWeight: 400,
               color: '#000000',
@@ -520,7 +591,7 @@ export default function Quiz() {
                   borderRadius: '8px',
                   border: '1px solid #D9D9D9',
                   backgroundColor: '#FFFFFF',
-                  fontFamily: 'Inter',
+                  fontFamily: 'Inter, sans-serif',
                   fontSize: '16px',
                   color: '#201515',
                   outline: 'none',
@@ -546,7 +617,7 @@ export default function Quiz() {
                   padding: '16px 20px',
                   borderRadius: '8px',
                   border: emailError ? '1px solid #FF0000' : '1px solid #D9D9D9',
-                  fontFamily: 'Inter',
+                  fontFamily: 'Inter, sans-serif',
                   fontSize: '16px',
                   color: '#201515',
                   outline: 'none',
@@ -557,7 +628,7 @@ export default function Quiz() {
                 onBlur={(e) => !emailError && (e.target.style.border = '1px solid #D9D9D9')}
               />
               {emailError && (
-                <p style={{ color: '#FF0000', fontSize: '14px', marginTop: '8px', fontFamily: 'Inter' }}>
+                <p style={{ color: '#FF0000', fontSize: '14px', marginTop: '8px', fontFamily: 'Inter, sans-serif' }}>
                   {emailError}
                 </p>
               )}
@@ -574,7 +645,7 @@ export default function Quiz() {
                 border: 'none',
                 backgroundColor: '#8040F0',
                 color: '#FFFFFF',
-                fontFamily: 'Inter',
+                fontFamily: 'Inter, sans-serif',
                 fontSize: '18px',
                 fontWeight: 600,
                 cursor: isSubmitting ? 'not-allowed' : 'pointer',
@@ -625,7 +696,7 @@ export default function Quiz() {
                 <h3
                   style={{
                     textTransform: 'uppercase',
-                    fontFamily: 'Inter',
+                    fontFamily: 'Inter, sans-serif',
                     fontWeight: 500,
                     fontSize: '11px',
                     letterSpacing: '11px',
@@ -641,7 +712,7 @@ export default function Quiz() {
                 {/* Maturity Level */}
                 <h2
                   style={{
-                    fontFamily: 'Inter Display',
+                    fontFamily: 'Inter, sans-serif',
                     fontWeight: 500,
                     fontSize: '48px',
                     letterSpacing: '-0.02em',
@@ -656,7 +727,7 @@ export default function Quiz() {
                 {maturityLevel === 'Reactive IT' && (
                   <p
                     style={{
-                      fontFamily: 'Inter Display',
+                      fontFamily: 'Inter, sans-serif',
                       fontWeight: 400,
                       fontSize: '18px',
                       letterSpacing: '-0.004em',
@@ -672,7 +743,7 @@ export default function Quiz() {
                 {maturityLevel === 'Structured IT' && (
                   <p
                     style={{
-                      fontFamily: 'Inter Display',
+                      fontFamily: 'Inter, sans-serif',
                       fontWeight: 400,
                       fontSize: '18px',
                       letterSpacing: '-0.004em',
@@ -688,7 +759,7 @@ export default function Quiz() {
                 {maturityLevel === 'Optimized IT' && (
                   <p
                     style={{
-                      fontFamily: 'Inter Display',
+                      fontFamily: 'Inter, sans-serif',
                       fontWeight: 400,
                       fontSize: '18px',
                       letterSpacing: '-0.004em',
@@ -733,7 +804,7 @@ export default function Quiz() {
                     }, 150);
                   }}
                   style={{
-                    fontFamily: 'Inter',
+                    fontFamily: 'Inter, sans-serif',
                     fontSize: '20px',
                     fontWeight: 600,
                     color: '#FFFFFF',
@@ -742,13 +813,45 @@ export default function Quiz() {
                     borderRadius: '8px',
                     padding: '18px 28px',
                     cursor: 'pointer',
-                    transition: 'background-color 200ms ease'
+                    transition: 'background-color 200ms ease',
+                    minWidth: '320px'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6F35D1'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#8040F0'}
                 >
                   Read the complete guide {'->'}
                 </button>
+
+                {/* Retake Quiz button for returning users */}
+                {isReturningUser && (
+                  <button
+                    onClick={handleRetakeQuiz}
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '20px',
+                      fontWeight: 600,
+                      color: '#4A5565',
+                      backgroundColor: 'transparent',
+                      border: '1px solid #D9D9D9',
+                      borderRadius: '8px',
+                      padding: '18px 28px',
+                      cursor: 'pointer',
+                      transition: 'all 200ms ease',
+                      marginTop: '12px',
+                      minWidth: '320px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#9966FF';
+                      e.currentTarget.style.color = '#9966FF';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#D9D9D9';
+                      e.currentTarget.style.color = '#4A5565';
+                    }}
+                  >
+                    Retake Quiz
+                  </button>
+                )}
               </div>
 
               {/* Right Column - SVG Visualization - All 3 stacked */}
@@ -771,7 +874,7 @@ export default function Quiz() {
                     </defs>
                   </svg>
                   {/* Text overlay */}
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Optimized IT' ? '#FFFFFF' : '#868686', transition: 'color 300ms ease' }}>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Optimized IT' ? '#FFFFFF' : '#868686', transition: 'color 300ms ease' }}>
                     Optimized IT
                   </div>
                 </div>
@@ -813,7 +916,7 @@ export default function Quiz() {
                     </defs>
                   </svg>
                   {/* Text overlay */}
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Structured IT' ? '#FFFFFF' : '#868686', transition: 'color 300ms ease' }}>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Structured IT' ? '#FFFFFF' : '#868686', transition: 'color 300ms ease' }}>
                     Structured IT
                   </div>
                 </div>
@@ -855,7 +958,7 @@ export default function Quiz() {
                     </defs>
                   </svg>
                   {/* Text overlay */}
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Reactive IT' ? '#FFFFFF' : '#868686', transition: 'color 300ms ease' }}>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.015em', color: maturityLevel === 'Reactive IT' ? '#FFFFFF' : '#868686', transition: 'color 300ms ease' }}>
                     Reactive IT
                   </div>
                 </div>
@@ -870,7 +973,7 @@ export default function Quiz() {
               <h3
                 style={{
                   textTransform: 'uppercase',
-                  fontFamily: 'Inter',
+                  fontFamily: 'Inter, sans-serif',
                   fontWeight: 500,
                   fontSize: '11px',
                   letterSpacing: '11px',
@@ -889,12 +992,12 @@ export default function Quiz() {
                 {answers[3] === 'option_1' && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Simple AI deflection, fast implementation, low admin overhead</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Simple AI deflection, fast implementation, low admin overhead</div>
                     </div>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>At 1,000 deflectable tickets/month, effective AI can reclaim 250-500 hours of agent time.</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>At 1,000 deflectable tickets/month, effective AI can reclaim 250-500 hours of agent time.</div>
                     </div>
                   </div>
                 )}
@@ -902,12 +1005,12 @@ export default function Quiz() {
                 {answers[3] === 'option_2' && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Slack/Teams-native, consumer-simple UX, mobile-first</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Slack/Teams-native, consumer-simple UX, mobile-first</div>
                     </div>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Employees shouldn't need training to get help. Meet them where they already work.</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Employees shouldn't need training to get help. Meet them where they already work.</div>
                     </div>
                   </div>
                 )}
@@ -915,12 +1018,12 @@ export default function Quiz() {
                 {answers[3] === 'option_3' && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Start with deflection before workflow automation</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Start with deflection before workflow automation</div>
                     </div>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Reduce volume first—then you'll have capacity to build automation.</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Reduce volume first—then you'll have capacity to build automation.</div>
                     </div>
                   </div>
                 )}
@@ -928,12 +1031,12 @@ export default function Quiz() {
                 {answers[3] === 'option_4' && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Quick wins with AI deflection to build momentum</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Quick wins with AI deflection to build momentum</div>
                     </div>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Demonstrate ROI with measurable ticket reduction before larger transformation.</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Demonstrate ROI with measurable ticket reduction before larger transformation.</div>
                     </div>
                   </div>
                 )}
@@ -945,12 +1048,12 @@ export default function Quiz() {
                 {answers[3] === 'option_1' && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Production-ready AI with proven deflection rates, workflow automation</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Production-ready AI with proven deflection rates, workflow automation</div>
                     </div>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Every automated workflow saves 10-20 minutes per execution.</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Every automated workflow saves 10-20 minutes per execution.</div>
                     </div>
                   </div>
                 )}
@@ -958,12 +1061,12 @@ export default function Quiz() {
                 {answers[3] === 'option_2' && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Seamless handoffs, proactive notifications, self-service workflows</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Seamless handoffs, proactive notifications, self-service workflows</div>
                     </div>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Employees feel the friction of manual handoffs. Smooth the edges.</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Employees feel the friction of manual handoffs. Smooth the edges.</div>
                     </div>
                   </div>
                 )}
@@ -971,12 +1074,12 @@ export default function Quiz() {
                 {answers[3] === 'option_3' && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>ESM capabilities, low-code workflows, strong integrations</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>ESM capabilities, low-code workflows, strong integrations</div>
                     </div>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Extend service management beyond IT without proportional headcount.</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Extend service management beyond IT without proportional headcount.</div>
                     </div>
                   </div>
                 )}
@@ -984,12 +1087,12 @@ export default function Quiz() {
                 {answers[3] === 'option_4' && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>API-first platforms that integrate with your ecosystem</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>API-first platforms that integrate with your ecosystem</div>
                     </div>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Avoid rip-and-replace. Composable platforms let you modernize incrementally.</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Avoid rip-and-replace. Composable platforms let you modernize incrementally.</div>
                     </div>
                   </div>
                 )}
@@ -1001,12 +1104,12 @@ export default function Quiz() {
                 {answers[3] === 'option_1' && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Advanced AI for edge cases, predictive capabilities</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Advanced AI for edge cases, predictive capabilities</div>
                     </div>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>You've handled the obvious—now tackle the long tail.</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>You've handled the obvious—now tackle the long tail.</div>
                     </div>
                   </div>
                 )}
@@ -1014,12 +1117,12 @@ export default function Quiz() {
                 {answers[3] === 'option_2' && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Proactive service, personalization, cross-department consistency</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Proactive service, personalization, cross-department consistency</div>
                     </div>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Move from reactive to anticipatory service delivery.</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Move from reactive to anticipatory service delivery.</div>
                     </div>
                   </div>
                 )}
@@ -1027,12 +1130,12 @@ export default function Quiz() {
                 {answers[3] === 'option_3' && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Federated architecture, enterprise-wide ESM</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Federated architecture, enterprise-wide ESM</div>
                     </div>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Your model works—now extend it systematically across the organization.</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Your model works—now extend it systematically across the organization.</div>
                     </div>
                   </div>
                 )}
@@ -1040,12 +1143,12 @@ export default function Quiz() {
                 {answers[3] === 'option_4' && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Composable architecture, consumption analytics, transparent TCO</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Priority</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Composable architecture, consumption analytics, transparent TCO</div>
                     </div>
                     <div style={{ borderLeft: '2px solid #A182FF', paddingLeft: '16px' }}>
-                      <div style={{ fontFamily: 'Inter Display', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
-                      <div style={{ fontFamily: 'Inter', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Value shifts from cost reduction to capacity creation for strategic work.</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', color: '#101828', letterSpacing: '-0.005em', marginBottom: '8px' }}>Insight</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#201515', letterSpacing: '-0.0015em', textWrap: 'balance' } as React.CSSProperties}>Value shifts from cost reduction to capacity creation for strategic work.</div>
                     </div>
                   </div>
                 )}
@@ -1082,7 +1185,7 @@ export default function Quiz() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <span
               style={{
-                fontFamily: 'Inter',
+                fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
                 fontSize: '14px',
                 color: '#201515',
@@ -1093,7 +1196,7 @@ export default function Quiz() {
             </span>
             <span
               style={{
-                fontFamily: 'Inter',
+                fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
                 fontSize: '14px',
                 color: '#201515',
@@ -1129,7 +1232,7 @@ export default function Quiz() {
         >
           <h2
             style={{
-              fontFamily: 'Inter Display',
+              fontFamily: 'Inter, sans-serif',
               fontSize: '48px',
               fontWeight: 400,
               letterSpacing: '-0.96px',
@@ -1157,7 +1260,7 @@ export default function Quiz() {
                     ? 'linear-gradient(to right, #9966FF, #FF8FA3)'
                     : '#FFFFFF',
                   color: selectedOption === option.value ? '#FFFFFF' : '#201515',
-                  fontFamily: 'Inter',
+                  fontFamily: 'Inter, sans-serif',
                   fontSize: '18px',
                   fontWeight: 400,
                   letterSpacing: '-0.072px',
@@ -1209,7 +1312,7 @@ export default function Quiz() {
                 border: '1px solid #C1C1C1',
                 backgroundColor: '#FFFFFF',
                 color: '#201515',
-                fontFamily: 'Inter',
+                fontFamily: 'Inter, sans-serif',
                 fontSize: '16px',
                 fontWeight: 500,
                 cursor: 'pointer',
