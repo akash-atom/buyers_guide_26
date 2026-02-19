@@ -306,11 +306,11 @@ export const recommendations: Record<string, Record<string, { priority: string; 
     },
     'option_2': {
       priority: 'Slack/Teams-native, consumer-simple UX, mobile-first',
-      insight: 'Employees shouldn't need training to get help. Meet them where they already work.',
+      insight: "Employees shouldn't need training to get help. Meet them where they already work.",
     },
     'option_3': {
       priority: 'Start with deflection before workflow automation',
-      insight: 'Reduce volume first—then you'll have capacity to build automation.',
+      insight: "Reduce volume first—then you'll have capacity to build automation.",
     },
     'option_4': {
       priority: 'Quick wins with AI deflection to build momentum',
@@ -338,7 +338,7 @@ export const recommendations: Record<string, Record<string, { priority: string; 
   'Optimized IT': {
     'option_1': {
       priority: 'Advanced AI for edge cases, predictive capabilities',
-      insight: 'You've handled the obvious—now tackle the long tail.',
+      insight: "You've handled the obvious—now tackle the long tail.",
     },
     'option_2': {
       priority: 'Proactive service, personalization, cross-department consistency',

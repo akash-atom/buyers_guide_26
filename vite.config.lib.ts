@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react()],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: resolve(__dirname, 'src/components/ITMaturityQuiz.webflow.tsx'),
       name: 'BuyersGuideComponents',
       formats: ['es', 'umd'],
       fileName: (format) => `index.${format}.js`
