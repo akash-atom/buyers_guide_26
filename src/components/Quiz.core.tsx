@@ -89,6 +89,7 @@ export default function QuizCore({
   const resultsCardRef = useRef<HTMLDivElement>(null);
 
   // Background style based on prop
+  const isWebflow = background === 'transparent';
   const bgStyle = background === 'gradient'
     ? 'linear-gradient(180deg, #F9F5FF 0%, #FFFFFF 100%)'
     : 'transparent';
@@ -374,7 +375,7 @@ export default function QuizCore({
     return (
       <div
         className="flex items-center justify-center p-4"
-        style={{ minHeight: '100vh', background: bgStyle }}
+        style={{ minHeight: isWebflow ? undefined : '100vh', background: bgStyle }}
       >
         <div
           style={{
@@ -401,7 +402,7 @@ export default function QuizCore({
       <div
         style={{
           position: 'relative',
-          minHeight: '100vh',
+          minHeight: isWebflow ? undefined : '100vh',
           background: bgStyle,
           display: 'flex',
           alignItems: 'center',
@@ -668,7 +669,7 @@ export default function QuizCore({
     return (
       <div
         style={{
-          minHeight: '100vh',
+          minHeight: isWebflow ? undefined : '100vh',
           background: bgStyle,
           display: 'flex',
           alignItems: 'center',
@@ -751,14 +752,6 @@ export default function QuizCore({
                       timestamp: new Date().toISOString()
                     }
                   }));
-                  console.log('Report event dispatched:', { maturityLevel, score: totalScore, selectedGoal: answers[3] });
-
-                  setTimeout(() => {
-                    const firstSection = document.querySelector('#section-intro');
-                    if (firstSection) {
-                      firstSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                  }, 150);
                 }}
                 style={{
                   fontFamily,
@@ -951,7 +944,7 @@ export default function QuizCore({
   return (
     <div
       className="flex items-center justify-center p-4"
-      style={{ minHeight: '100vh', background: bgStyle }}
+      style={{ minHeight: isWebflow ? undefined : '100vh', background: bgStyle }}
     >
       <div
         style={{
